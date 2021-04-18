@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5p [%15.15t] %20.20logger{0}: %m%n%ex</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/logs/peerbox.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/logs/peerbox-%d{yyyy_MM_dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d %-5p [%15.15t] %20.20logger{0}: %m%n%rEx</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="pt.ipb.dsys.peerbox" level="DEBUG" />
+
+    <root level="WARN">
+        <appender-ref ref="file" />
+        <appender-ref ref="stdout" />
+    </root>
+
+</configuration>
