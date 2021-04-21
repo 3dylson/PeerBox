@@ -2,7 +2,7 @@ version: '3'
 services:
 
   gossip-router:
-    image: openjdk:11
+    image: openjdk:15
     container_name: gossip-router
     networks:
       - peerbox-network
@@ -13,7 +13,7 @@ services:
     command: java -cp /app/ds-assignment-1.0-SNAPSHOT.jar org.jgroups.stack.GossipRouter -port 12001
 
   peer-node:
-    image: openjdk:11
+    image: openjdk:15
     scale: 5 # spawns 5 instance of this service
     networks:
       - peerbox-network
