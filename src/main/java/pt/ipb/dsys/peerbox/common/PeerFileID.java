@@ -1,6 +1,7 @@
 package pt.ipb.dsys.peerbox.common;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class PeerFileID implements Serializable, Comparable<PeerFileID> {
 
@@ -35,6 +36,7 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
     /*
     * Compares filesID to see which one has the earliest timestamp
     * If the timestamps can't be compared, compares the IDs
+    *
     * */
     @Override
     public int compareTo(PeerFileID other) {

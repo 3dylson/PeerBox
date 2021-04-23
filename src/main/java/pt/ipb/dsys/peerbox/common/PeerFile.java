@@ -54,6 +54,8 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
      */
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException {
+        /*this.BLOCK_SIZE*/
+        data[]
         return null;
     }
 
