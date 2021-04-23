@@ -54,9 +54,24 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
      */
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException {
-        /*this.BLOCK_SIZE*/
-        data[]
-        return null;
+        if(this.data.length == 0){
+            return null;
+        }
+
+        int BLOCKSIZE = this.BLOCK_SIZE;
+        int numOfChunks = (int)Math.ceil((double)this.data.length / BLOCKSIZE);
+        byte[][] partitions = new byte[numOfChunks][];
+
+        for(int i = 0; i < numOfChunks; i++) {
+            int start = i + BLOCKSIZE;
+            int length = Math.min(this.data.length - start, BLOCKSIZE);
+
+            byte[] temp = new byte[length];
+            System.arraycopy(this.data, start, temp, 0, length);
+            partitions[i] = temp;
+        }
+
+        return fileId;
     }
 
     /**
