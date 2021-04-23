@@ -1,8 +1,11 @@
 package pt.ipb.dsys.peerbox.common;
 
+import pt.ipb.dsys.peerbox.provider.PeerProvider;
+
 import java.rmi.RemoteException;
 import java.rmi.server.RMISocketFactory;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PeerFile extends UnicastRemoteObject implements PeerBox {
@@ -10,6 +13,8 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
     private PeerFileID fileId;
 
     private byte[] data;
+
+    private ArrayList<PeerProvider> providers;
 
     /**
      * Creates and exports a new UnicastRemoteObject object using an
@@ -43,7 +48,7 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
 
     /**
      * Operations:
-     * - Splits `path` in BLOCK_SIZE chunks
+     * - Splits `data` in BLOCK_SIZE chunks
      * - Propagates chunks to registered peers
      * - File exists -> use your imagination :)
      *

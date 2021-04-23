@@ -1,7 +1,8 @@
 package pt.ipb.dsys.peerbox.common;
 
+import org.jgroups.util.UUID;
+
 import java.io.Serializable;
-import java.util.Date;
 
 public class PeerFileID implements Serializable, Comparable<PeerFileID> {
 
@@ -9,19 +10,24 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
 
     public static final long serialVersionUID = 1L;
 
-    String ID;
+    UUID ID;
     long timestamp;
+    String path;
 
-    public PeerFileID( String ID, long timestamp){
-        this.ID = ID;
-        this.timestamp = timestamp;
+    public PeerFileID(){
+        this.ID = UUID.randomUUID();
+        this.timestamp = System.currentTimeMillis();
     }
 
-    public String getID() {
+    public UUID getID() {
         return ID;
     }
 
-    public void setID(String ID) {
+    public void setPath(String path){
+        this.path = path;
+    }
+
+    public void setID(UUID ID) {
         this.ID = ID;
     }
 

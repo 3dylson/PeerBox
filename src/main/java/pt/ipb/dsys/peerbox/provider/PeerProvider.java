@@ -5,14 +5,32 @@ import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
+import java.rmi.RemoteException;
+import java.rmi.server.RMISocketFactory;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
-public class PeerProvider implements PeerBox {
+public class PeerProvider extends UnicastRemoteObject implements PeerBox {
+
+    String ID;
+
+    /**
+     * Creates and exports a new UnicastRemoteObject object using an
+     * anonymous port.
+     *
+     * <p>The object is exported with a server socket
+     * created using the {@link RMISocketFactory} class.
+     *
+     * @throws RemoteException if failed to export object
+     * @since 1.1
+     */
+    protected PeerProvider() throws RemoteException {
+    }
 
 
     /**
      * Operations:
-     * - Splits `path` in BLOCK_SIZE chunks
+     * - Splits `data` in BLOCK_SIZE chunks
      * - Propagates chunks to registered peers
      * - File exists -> use your imagination :)
      *
@@ -24,7 +42,11 @@ public class PeerProvider implements PeerBox {
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException {
 
-        String[] p = path.split("/\\/g");
+        PeerFileID file = new PeerFileID();
+        file.setPath(path);
+
+        int replicaPerChunk = replicas;
+
         return null;
     }
 

@@ -17,13 +17,18 @@ public class PeerProviderMain {
         }
 
         try{
+            System.out.println("Creating " + PeerProvider.STUB_NAME + " object...");
+
             PeerProvider node = new PeerProvider();
             Registry registry = LocateRegistry.createRegistry(1099); // Should be same as gossip-Router's (12001) ??
+
+            System.out.println("Binding the node object to the registry...");
             registry.rebind(PeerProvider.STUB_NAME, node);
+
+            System.out.println("Provider node running...");
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
-        System.out.println("Provider running..."); // Will it run if catch is executed ??
     }
 }
