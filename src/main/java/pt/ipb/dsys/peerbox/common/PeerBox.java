@@ -11,7 +11,7 @@ public interface PeerBox {
 
     /**
      * Operations:
-     *  - Splits `path` in BLOCK_SIZE chunks
+     *  - Splits `data` in BLOCK_SIZE chunks
      *  - Propagates chunks to registered peers
      *  - File exists -> use your imagination :)
      * @param path The local path of the file to store in peer box
