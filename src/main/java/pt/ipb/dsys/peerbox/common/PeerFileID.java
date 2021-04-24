@@ -2,6 +2,7 @@ package pt.ipb.dsys.peerbox.common;
 
 import org.jgroups.util.UUID;
 
+import java.io.File;
 import java.io.Serializable;
 
 public class PeerFileID implements Serializable, Comparable<PeerFileID> {
@@ -10,13 +11,35 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
 
     public static final long serialVersionUID = 1L;
 
+    File file;
     UUID ID;
-    long timestamp;
+    String name;
     String path;
+    long timestamp;
+    String filehash;
 
-    public PeerFileID(){
-        this.ID = UUID.randomUUID();
-        this.timestamp = System.currentTimeMillis();
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(String file) {
+        this.file = new File(file);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getFilehash() {
+        return filehash;
+    }
+
+    public void setFilehash(String filehash) {
+        this.filehash = filehash;
     }
 
     public UUID getID() {
@@ -25,6 +48,10 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
 
     public void setPath(String path){
         this.path = path;
+    }
+
+    public String getPath(){
+        return path;
     }
 
     public void setID(UUID ID) {
@@ -37,6 +64,17 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public PeerFileID(String path, String name) {
+        if (name != null) {
+            System.out.println(path + "\\" + name);
+            this.ID = UUID.randomUUID();
+            this.timestamp = System.currentTimeMillis();
+            this.name = name;
+            this.path = path;
+            this.setFilehash(Integer.toString(this.getName().hashCode() + this.getPath().hashCode()));
+        }
     }
 
     /*
