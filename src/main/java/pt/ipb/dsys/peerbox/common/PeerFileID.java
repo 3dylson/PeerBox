@@ -16,7 +16,7 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
     String name;
     String path;
     long timestamp;
-    String filehash;
+    //String filehash;
 
     public File getFile() {
         return file;
@@ -34,13 +34,13 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
         this.name = name;
     }
 
-    public String getFilehash() {
+   /* public String getFilehash() {
         return filehash;
     }
 
     public void setFilehash(String filehash) {
         this.filehash = filehash;
-    }
+    }*/
 
     public UUID getID() {
         return ID;
@@ -66,15 +66,13 @@ public class PeerFileID implements Serializable, Comparable<PeerFileID> {
         this.timestamp = timestamp;
     }
 
-    public PeerFileID(String path, String name) {
-        if (name != null) {
-            System.out.println(path + "\\" + name);
+    public PeerFileID() {
+
+            //System.out.println(path + "\\" + name);
             this.ID = UUID.randomUUID();
             this.timestamp = System.currentTimeMillis();
-            this.name = name;
-            this.path = path;
-            this.setFilehash(Integer.toString(this.getName().hashCode() + this.getPath().hashCode()));
-        }
+            //this.setFilehash(Integer.toString(this.getName().hashCode() + this.getPath().hashCode()));
+
     }
 
     /*

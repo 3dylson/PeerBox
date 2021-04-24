@@ -6,7 +6,6 @@ import java.rmi.RemoteException;
 import java.rmi.server.RMISocketFactory;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.List;
 
 public class PeerFile extends UnicastRemoteObject implements PeerBox {
 
@@ -14,7 +13,8 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
 
     private byte[] data;
 
-    private ArrayList<PeerProvider> providers;
+    private ArrayList<PeerProvider> providers; //contains list of provider and there respective files.
+
 
     /**
      * Creates and exports a new UnicastRemoteObject object using an
@@ -26,9 +26,14 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
      * @throws RemoteException if failed to export object
      * @since 1.1
      */
-    protected PeerFile() throws RemoteException {
-        super();
+    protected PeerFile(String path, String name) throws RemoteException {
+        if (name != null) {
+            System.out.println(path + "\\" + name);
+            this.fileId.setPath(path);
+            this.fileId.setName(name);
+        }
     }
+
 
     public PeerFileID getFileId() {
         return fileId;
@@ -37,6 +42,7 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
     public void setFileId(PeerFileID fileId) {
         this.fileId = fileId;
     }
+
 
     public byte[] getData() {
         return data;
@@ -59,6 +65,7 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
      */
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException {
+
         if(this.data.length == 0){
             return null;
         }
@@ -109,9 +116,10 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
      * Shows all the files stored in peer box
      *
      * @throws PeerBoxException in case the list is empty
+     * @return
      */
     @Override
-    public List<PeerFile> listFiles() throws PeerBoxException {
+    public String[] listFiles() throws PeerBoxException {
         return null;
     }
 }
