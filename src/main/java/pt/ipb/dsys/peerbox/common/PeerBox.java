@@ -1,15 +1,13 @@
 package pt.ipb.dsys.peerbox.common;
 
-import java.rmi.Remote;
+import java.io.File;
 
 /**
  * The main interface that specifies the operation of the PeerBox system.
  * It contains the basic functionality.
  */
-public interface PeerBox extends Remote {
+public interface PeerBox {
 
-
-    String STUB_NAME = "PeerBox";
 
     // Block size in bytes (default: 64k)
     int BLOCK_SIZE = 64 * 1024;
@@ -51,7 +49,10 @@ public interface PeerBox extends Remote {
      * Shows all the files stored in peer box
      * @throws PeerBoxException in case the list is empty
      * @return*/
-    String[] listFiles() throws PeerBoxException;
+    File[] listFiles() throws PeerBoxException;
+
+
+     PeerFileID data(String path) throws PeerBoxException;
 
 
 }

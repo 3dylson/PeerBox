@@ -5,8 +5,10 @@ import org.jgroups.JChannel;
 import org.jgroups.Message;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class PeerFile implements PeerBox {
 
@@ -102,7 +104,8 @@ public class PeerFile implements PeerBox {
      * @return
      */
     @Override
-    public String[] listFiles() throws PeerBoxException {
+    public File[] listFiles() throws PeerBoxException {
+        File dir = new File("dropdown");
         return null;
     }
 }
