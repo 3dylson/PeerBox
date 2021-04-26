@@ -11,6 +11,7 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
 
+
     public static void main(String[] args) {
 
         // Cluster initialization and connection
@@ -26,6 +27,7 @@ public class Main {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+
 
     }
 

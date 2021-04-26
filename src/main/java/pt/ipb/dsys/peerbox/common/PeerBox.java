@@ -1,7 +1,6 @@
 package pt.ipb.dsys.peerbox.common;
 
 import java.rmi.Remote;
-import java.util.List;
 
 /**
  * The main interface that specifies the operation of the PeerBox system.
@@ -17,7 +16,7 @@ public interface PeerBox extends Remote {
 
     /**
      * Operations:
-     *  - Splits `path` in BLOCK_SIZE chunks
+     *  - Splits `data` in BLOCK_SIZE chunks
      *  - Propagates chunks to registered peers
      *  - File exists -> use your imagination :)
      * @param path The local path of the file to store in peer box
@@ -25,7 +24,7 @@ public interface PeerBox extends Remote {
      * @return The ID of the file in the PeerBox
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
-    PeerFileID save(String path, int replicas) throws PeerBoxException;
+    PeerFileID save(String path, int replicas) throws Exception;
 
 
     /**
@@ -51,8 +50,8 @@ public interface PeerBox extends Remote {
     /**
      * Shows all the files stored in peer box
      * @throws PeerBoxException in case the list is empty
-     * */
-    List<PeerFile> listFiles() throws PeerBoxException;
+     * @return*/
+    String[] listFiles() throws PeerBoxException;
 
 
 }

@@ -1,39 +1,28 @@
 package pt.ipb.dsys.peerbox.common;
 
-import pt.ipb.dsys.peerbox.provider.PeerProvider;
+import com.google.common.collect.Lists;
+import org.jgroups.JChannel;
+import org.jgroups.Message;
+import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 
-import java.rmi.RemoteException;
-import java.rmi.server.RMISocketFactory;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class PeerFile extends UnicastRemoteObject implements PeerBox {
+public class PeerFile implements PeerBox {
+
+    private static final String CLUSTER_NAME = "PeerBox";
+    JChannel channel;
 
     private PeerFileID fileId;
 
     private byte[] data;
+    private String setFilehash;
 
-    private ArrayList<PeerProvider> providers; //contains list of provider and there respective files.
 
-
-    /**
-     * Creates and exports a new UnicastRemoteObject object using an
-     * anonymous port.
-     *
-     * <p>The object is exported with a server socket
-     * created using the {@link RMISocketFactory} class.
-     *
-     * @throws RemoteException if failed to export object
-     * @since 1.1
-     */
-    protected PeerFile(String path, String name) throws RemoteException {
-        if (name != null) {
-            System.out.println(path + "\\" + name);
-            this.fileId.setPath(path);
-            this.fileId.setName(name);
-        }
+    public PeerFile() throws Exception {
+        channel = new JChannel(DefaultProtocols.gossipRouter());
+        channel.connect(CLUSTER_NAME);
     }
-
 
     public PeerFileID getFileId() {
         return fileId;
@@ -66,24 +55,18 @@ public class PeerFile extends UnicastRemoteObject implements PeerBox {
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException {
 
-        if(this.data.length == 0){
-            return null;
-        }
+        List<byte[]> data = Collections.singletonList(this.data);
+        List<List<byte[]>> splittedData = Lists.partition(data, BLOCK_SIZE);
 
-        int BLOCKSIZE = this.BLOCK_SIZE;
-        int numOfChunks = (int)Math.ceil((double)this.data.length / BLOCKSIZE);
-        byte[][] partitions = new byte[numOfChunks][];
+        /*for (List<byte[]> chunk: splittedData)
+        {
+            chunk * replicas;
+        }*/
 
-        for(int i = 0; i < numOfChunks; i++) {
-            int start = i + BLOCKSIZE;
-            int length = Math.min(this.data.length - start, BLOCKSIZE);
+        Message msg = new Message(null,splittedData);
+        channel.send(msg);
 
-            byte[] temp = new byte[length];
-            System.arraycopy(this.data, start, temp, 0, length);
-            partitions[i] = temp;
-        }
-
-        return fileId;
+        return null;
     }
 
     /**
