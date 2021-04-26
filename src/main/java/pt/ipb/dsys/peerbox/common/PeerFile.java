@@ -6,22 +6,29 @@ import org.jgroups.Message;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+
+import static java.lang.System.exit;
 
 public class PeerFile implements PeerBox {
 
     private static final String CLUSTER_NAME = "PeerBox";
+
     JChannel channel;
 
     private PeerFileID fileId;
-
     private byte[] data;
-    private String setFilehash;
+
+    private Collection<Chunk> chunks;
+    private int filehash;
 
 
-    public PeerFile() throws Exception {
+    public PeerFile(String pathName) throws Exception {
+        File dir = new File(pathName);
+        int hash =  dir.hashCode();
+        this.setFilehash(hash);
         channel = new JChannel(DefaultProtocols.gossipRouter());
         channel.connect(CLUSTER_NAME);
     }
@@ -43,6 +50,14 @@ public class PeerFile implements PeerBox {
         this.data = data;
     }
 
+    public int getFilehash() {
+        return filehash;
+    }
+
+    public void setFilehash(int filehash) {
+        this.filehash = filehash;
+    }
+
     /**
      * Operations:
      * - Splits `data` in BLOCK_SIZE chunks
@@ -55,20 +70,29 @@ public class PeerFile implements PeerBox {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFileID save(String path, int replicas) throws PeerBoxException {
+    public PeerFileID save(String path, int replicas) throws Exception {
 
-        List<byte[]> data = Collections.singletonList(this.data);
-        List<List<byte[]>> splittedData = Lists.partition(data, BLOCK_SIZE);
+        boolean bool = false;
+        File file = new File(path);
 
-        /*for (List<byte[]> chunk: splittedData)
-        {
-            chunk * replicas;
-        }*/
+        bool = file.exists();
 
-        Message msg = new Message(null,splittedData);
-        channel.send(msg);
+        if(!bool){
 
-        return null;
+            List<byte[]> data = Collections.singletonList(this.data);
+            List<List<byte[]>> splittedData = Lists.partition(data, BLOCK_SIZE);
+
+            int i=0;
+            while(i++<replicas) {
+                //Message msg = new Message(null, splittedData);
+                channel.send((Message) splittedData);
+            }
+
+        } else{
+            System.out.print("This file already exists!");
+        }
+
+        return fileId;
     }
 
     /**
@@ -106,6 +130,11 @@ public class PeerFile implements PeerBox {
     @Override
     public File[] listFiles() throws PeerBoxException {
         File dir = new File("dropdown");
+        return null;
+    }
+
+    @Override
+    public PeerFileID data(String path) throws PeerBoxException {
         return null;
     }
 }
