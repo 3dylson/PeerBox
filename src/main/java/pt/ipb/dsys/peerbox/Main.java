@@ -2,10 +2,13 @@ package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
 import org.jgroups.ObjectMessage;
+import org.jgroups.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ipb.dsys.peerbox.common.PeerBox;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
+import pt.ipb.dsys.peerbox.common.PeerFileID;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
@@ -20,6 +23,7 @@ public class Main {
 
     private JChannel channel;
     PeerFile dir;
+    PeerBox peerBox;
 
 
     public static void main(String[] args) {
@@ -35,8 +39,8 @@ public class Main {
 
             channel.connect(CLUSTER_NAME);
             channel.setReceiver(new LoggingReceiver());
-            channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
-            channel.getState(null, 10000);
+            //channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
+            //channel.getState(null, 10000);
 
             String hostname = DnsHelper.getHostName();
 
@@ -45,11 +49,28 @@ public class Main {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
                     //File[] f = dir.listFiles();
-                    System.out.print("> "); System.out.flush();
+                    System.out.print("> Menu PeerBox (You can type):\n save\n fetch\n delete\n listfiles\n data\n or exit to leave :)\n  "); System.out.flush();
                     String line=in.readLine().toLowerCase();
                     if(line.startsWith("quit") || line.startsWith("exit"))
                         break;
-                    line="[" + hostname + "] " + line;
+                    else if(line.startsWith("save")){
+                        line=" Executed " + line;
+                        System.out.print("> Enter the path of the file\n");
+                        String path = in.readLine();
+                        System.out.print("> Enter the number of the replicas(per chunks)\n");
+                        int replicas = in.read();
+                        peerBox.save(path,replicas);
+                        logger.info("The file was saved in the path {} with {} replicas", path,replicas);
+                    }
+                    else if(line.startsWith("fetch")){
+                        line=" Executed " + line;
+                        System.out.print("> Enter the PeerFileID to retrieve the file\n");
+                        PeerFile id = null;
+                        int id2 = in.read();
+                        /*assert false;
+                        id.setFileId(id2);
+                        peerBox.fetch(id);*/
+                    }
                     ObjectMessage message = new ObjectMessage(null,line);
                     channel.send(message);
                     Sleeper.sleep(2000);
