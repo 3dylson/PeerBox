@@ -58,6 +58,7 @@ public class Main {
                             2. List all files
                             Or "exit" to leave.
                             """); System.out.flush();
+                    Sleeper.sleep(10000);
                     String line=in.readLine().toLowerCase();
                     if(line.startsWith("quit") || line.startsWith("exit"))
                         break;
