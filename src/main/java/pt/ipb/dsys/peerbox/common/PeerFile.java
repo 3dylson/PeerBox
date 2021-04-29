@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
+import org.jgroups.ObjectMessage;
 import org.jgroups.conf.ClassConfigurator;
 import pt.ipb.dsys.peerbox.Main;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
@@ -85,21 +86,23 @@ public class PeerFile implements PeerBox  {
 
         //bool = file.exists();
 
-        if(!bool){
+        //if(!bool){
 
             List<byte[]> data = Collections.singletonList(this.data);
             List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
-            chunks.add((Chunk) splitedData);
+            //chunks.add((Chunk) splitedData);
 
             int i=0;
             while(i++<replicas) {
                 //Message msg = new Message(null, splitedData);
-                channel.send((Message) splitedData);
+                //channel.send((Message) splitedData);
+                ObjectMessage msg = (ObjectMessage) new ObjectMessage(null,splitedData).putHeader(PeerFileID.ID, new PeerFileID(this.fileId.filename, this.fileId.eof));
+                channel.send(msg);
             }
 
-        } else{
+        /*} else{
             System.out.print("This file already exists!");
-        }
+        }*/
 
         return fileId;
     }

@@ -34,7 +34,7 @@ public interface PeerBox {
      * @return the resulting file stored in the PeerBox system and associated metadata
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
-    PeerFile fetch(PeerFileID id) throws PeerBoxException;
+    PeerFile fetch(PeerFileID id) throws PeerBoxException, Exception;
 
 
     /**

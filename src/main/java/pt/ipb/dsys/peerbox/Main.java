@@ -1,6 +1,7 @@
 package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
+import org.jgroups.Message;
 import org.jgroups.ObjectMessage;
 import org.jgroups.util.Util;
 import org.slf4j.Logger;
@@ -74,6 +75,8 @@ public class Main {
                             data = in.readLine();
                             buf = data.getBytes(StandardCharsets.UTF_8);
                             fileIn.setData(buf);
+                            ObjectMessage message = new ObjectMessage(null,data);
+                            channel.send(message);
                         }while (!data.equals("s"));
                         System.out.print("> Enter the path of the file\n");
                         String path = in.readLine();
@@ -81,8 +84,6 @@ public class Main {
                         int replicas = in.read();
                         fileIn.save(path,replicas);
                         logger.info("The file was saved in the path {} with {} replicas", path,replicas);
-
-
 
                         /*line=" Executed " + line;
                         System.out.print("> Enter the name of the file you which to save\n");

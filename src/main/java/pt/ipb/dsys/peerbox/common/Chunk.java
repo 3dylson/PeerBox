@@ -11,9 +11,5 @@ public class Chunk {
         this.chunkNo = chunkNo;
     }
 
-    public Chunk replicate(int num){
-        //Chunk chunk = fileID.getData();
-    }
-
 
 }
