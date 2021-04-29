@@ -14,7 +14,9 @@ import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
 
@@ -49,18 +51,50 @@ public class Main {
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
                     //File[] f = dir.listFiles();
-                    System.out.print("> Menu PeerBox (You can type):\n save\n fetch\n delete\n listfiles\n data\n or exit to leave :)\n  "); System.out.flush();
+                    System.out.print("""
+                            > Welcome to our PeerBox! :)
+                            1. Create a file
+                            2. List all files
+                            Or "exit" to leave.
+                            """); System.out.flush();
                     String line=in.readLine().toLowerCase();
                     if(line.startsWith("quit") || line.startsWith("exit"))
                         break;
-                    else if(line.startsWith("save")){
-                        line=" Executed " + line;
+                    else if(line.startsWith("1")){
+                        System.out.print("> Name your file\n");
+                        String fileName = in.readLine();
+                        //FileInputStream fileIn = new FileInputStream(fileName);
+                        PeerFile fileIn = new PeerFile(fileName);
+                        System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
+                        String data;
+                        do {
+                            /*byte[] buf = new byte[8096];
+                            int bytes=fileIn.*/
+                            byte[] buf = new byte[8096];
+                            data = in.readLine();
+                            buf = data.getBytes(StandardCharsets.UTF_8);
+                            fileIn.setData(buf);
+                        }while (!data.equals("s"));
                         System.out.print("> Enter the path of the file\n");
                         String path = in.readLine();
                         System.out.print("> Enter the number of the replicas(per chunks)\n");
                         int replicas = in.read();
-                        peerBox.save(path,replicas);
+                        fileIn.save(path,replicas);
                         logger.info("The file was saved in the path {} with {} replicas", path,replicas);
+
+
+
+                        /*line=" Executed " + line;
+                        System.out.print("> Enter the name of the file you which to save\n");
+                        String fileName = in.readLine();
+                        FileInputStream fileIn = new FileInputStream(fileName);
+
+                        System.out.print("> Enter the path of the file\n");
+                        String path = in.readLine();
+                        System.out.print("> Enter the number of the replicas(per chunks)\n");
+                        int replicas = in.read();
+                        //peerBox.save(path,replicas);
+                        logger.info("The file was saved in the path {} with {} replicas", path,replicas);*/
                     }
                     else if(line.startsWith("fetch")){
                         line=" Executed " + line;

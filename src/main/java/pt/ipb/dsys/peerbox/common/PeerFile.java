@@ -1,36 +1,44 @@
 package pt.ipb.dsys.peerbox.common;
 
 import com.google.common.collect.Lists;
+import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
+import org.jgroups.conf.ClassConfigurator;
+import pt.ipb.dsys.peerbox.Main;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
-
 import java.io.File;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static java.lang.System.exit;
+public class PeerFile implements PeerBox  {
 
-public class PeerFile implements PeerBox {
-
-    private static final String CLUSTER_NAME = "PeerBox";
 
     JChannel channel;
+    Map<String, OutputStream> files = new ConcurrentHashMap<>();
+
+    private Collection<Chunk> chunks;
 
     private PeerFileID fileId;
     private byte[] data;
 
-    private Collection<Chunk> chunks;
-    private int filehash;
 
 
-    public PeerFile(String pathName) throws Exception {
-        File dir = new File(pathName);
-        int hash =  dir.hashCode();
-        this.setFilehash(hash);
+    public PeerFile(String filename) throws Exception {
+        ClassConfigurator.add(PeerFileID.ID, PeerFileID.class);
+        PeerFileID id = new PeerFileID();
+        id.filename = filename;
+        //File dir = new File(pathName);
+        //int hash =  dir.hashCode();
+        //this.setFilehash(hash);
+        //this.fileId = fileId;
+        //fileId.filehash = hash;
         channel = new JChannel(DefaultProtocols.gossipRouter());
-        channel.connect(CLUSTER_NAME);
+        channel.connect(Main.CLUSTER_NAME);
     }
 
     public PeerFileID getFileId() {
@@ -50,13 +58,13 @@ public class PeerFile implements PeerBox {
         this.data = data;
     }
 
-    public int getFilehash() {
+   /* public int getFilehash() {
         return filehash;
     }
 
     public void setFilehash(int filehash) {
         this.filehash = filehash;
-    }
+    }*/
 
     /**
      * Operations:
@@ -73,19 +81,20 @@ public class PeerFile implements PeerBox {
     public PeerFileID save(String path, int replicas) throws Exception {
 
         boolean bool = false;
-        File file = new File(path);
+        //PeerFile file = new PeerFile(path,null);
 
-        bool = file.exists();
+        //bool = file.exists();
 
         if(!bool){
 
             List<byte[]> data = Collections.singletonList(this.data);
-            List<List<byte[]>> splittedData = Lists.partition(data, BLOCK_SIZE);
+            List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
+            chunks.add((Chunk) splitedData);
 
             int i=0;
             while(i++<replicas) {
-                //Message msg = new Message(null, splittedData);
-                channel.send((Message) splittedData);
+                //Message msg = new Message(null, splitedData);
+                channel.send((Message) splitedData);
             }
 
         } else{
@@ -106,7 +115,13 @@ public class PeerFile implements PeerBox {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFile fetch(PeerFileID id) throws PeerBoxException {
+    public PeerFile fetch(PeerFileID id) throws Exception {
+
+        /*Address address = id;
+        channel.getAddress();
+        PeerFile file = new PeerFile(ID);
+        channel.send(null, file);*/
+
         return null;
     }
 
@@ -124,12 +139,11 @@ public class PeerFile implements PeerBox {
     /**
      * Shows all the files stored in peer box
      *
-     * @throws PeerBoxException in case the list is empty
      * @return
      */
     @Override
-    public File[] listFiles() throws PeerBoxException {
-        File dir = new File("dropdown");
+    public File[] listFiles() {
+        //File dir = new File("dropdown");
         return null;
     }
 
