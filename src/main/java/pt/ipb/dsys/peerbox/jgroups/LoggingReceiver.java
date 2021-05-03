@@ -28,11 +28,13 @@ public class LoggingReceiver implements Receiver {
 
     @Override
     public void receive(Message msg) {
-        String line = msg.getSrc() + ": " + msg.getObject();
+        logger.info("Message from {} to {}: {}", msg.src(), msg.dest(), msg.getObject());
+
+        /*String line = msg.getSrc() + ": " + msg.getObject();
         logger.info(line);
         synchronized (state){
             state.add(line);
-        }
+        }*/
 
     }
 

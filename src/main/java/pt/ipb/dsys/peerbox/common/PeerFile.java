@@ -1,15 +1,10 @@
 package pt.ipb.dsys.peerbox.common;
 
 import com.google.common.collect.Lists;
-import org.jgroups.Address;
 import org.jgroups.JChannel;
-import org.jgroups.Message;
 import org.jgroups.ObjectMessage;
-import org.jgroups.conf.ClassConfigurator;
-import pt.ipb.dsys.peerbox.Main;
-import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
-import java.io.File;
-import java.io.OutputStream;
+
+import java.io.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -28,18 +23,9 @@ public class PeerFile implements PeerBox  {
     private byte[] data;
 
 
+    public PeerFile(PeerFileID fileId) {
+        this.fileId = fileId;
 
-    public PeerFile(String filename) throws Exception {
-        ClassConfigurator.add(PeerFileID.ID, PeerFileID.class);
-        PeerFileID id = new PeerFileID();
-        id.filename = filename;
-        //File dir = new File(pathName);
-        //int hash =  dir.hashCode();
-        //this.setFilehash(hash);
-        //this.fileId = fileId;
-        //fileId.filehash = hash;
-        channel = new JChannel(DefaultProtocols.gossipRouter());
-        channel.connect(Main.CLUSTER_NAME);
     }
 
     public PeerFileID getFileId() {
@@ -59,13 +45,6 @@ public class PeerFile implements PeerBox  {
         this.data = data;
     }
 
-   /* public int getFilehash() {
-        return filehash;
-    }
-
-    public void setFilehash(int filehash) {
-        this.filehash = filehash;
-    }*/
 
     /**
      * Operations:
@@ -81,6 +60,36 @@ public class PeerFile implements PeerBox  {
     @Override
     public PeerFileID save(String path, int replicas) throws Exception {
 
+        //getFileId().setPath(path);
+
+        String filename = this.getFileId().getFilename();
+
+        String filePath = this.getFileId().getPath();
+
+       // File file = new File(filePath);
+        FileOutputStream out = new FileOutputStream(filePath);
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+
+        /*file.setWritable(true);
+        file.setExecutable(true);
+        file.setReadable(true);*/
+
+
+
+
+        System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
+        String fdata;
+        for(;;) {
+            /*byte[] buf = new byte[8096];
+            out.write(buf);
+            int bytes = out.write(buf);*/
+            fdata = in.readLine();
+            out.write(fdata.getBytes());
+            if(fdata.equals("s"))
+                break;
+            this.setData(fdata.getBytes());
+        }
+
         boolean bool = false;
         //PeerFile file = new PeerFile(path,null);
 
@@ -88,7 +97,7 @@ public class PeerFile implements PeerBox  {
 
         //if(!bool){
 
-            List<byte[]> data = Collections.singletonList(this.data);
+            List<byte[]> data = Collections.singletonList(this.getData());
             List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
             //chunks.add((Chunk) splitedData);
 
@@ -96,13 +105,23 @@ public class PeerFile implements PeerBox  {
             while(i++<replicas) {
                 //Message msg = new Message(null, splitedData);
                 //channel.send((Message) splitedData);
-                ObjectMessage msg = (ObjectMessage) new ObjectMessage(null,splitedData).putHeader(PeerFileID.ID, new PeerFileID(this.fileId.filename, this.fileId.eof));
+                ObjectMessage msg = new ObjectMessage(null,splitedData);
                 channel.send(msg);
             }
 
         /*} else{
             System.out.print("This file already exists!");
         }*/
+
+        //Example:
+        /*Person p=new Person("Bela Ban", 322649, array);
+        Message msg=new ObjectMessage(dest, p);
+        channel.send(msg)
+
+        // or
+
+        msg=new ObjectMessage(null, "hello world");
+        channel.send(msg);*/
 
         return fileId;
     }

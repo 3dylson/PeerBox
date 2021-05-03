@@ -1,9 +1,7 @@
 package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
-import org.jgroups.Message;
 import org.jgroups.ObjectMessage;
-import org.jgroups.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerBox;
@@ -15,9 +13,7 @@ import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 public class Main {
 
@@ -30,12 +26,12 @@ public class Main {
 
 
     public static void main(String[] args) {
-
-        new Main().initializeCluster();
+        boolean isNode = args.length > 0 && args[0].equals("node");
+        new Main().initializeCluster(isNode);
 
     }
 
-    private void initializeCluster() {
+    private void initializeCluster(boolean isNode) {
 
         // Cluster initialization and connection
         try (JChannel channel = new JChannel(DefaultProtocols.gossipRouter())) {
@@ -48,43 +44,38 @@ public class Main {
             String hostname = DnsHelper.getHostName();
 
 
-            while (true){
-                try {
-                    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-                    //File[] f = dir.listFiles();
-                    System.out.print("""
-                            > Welcome to our PeerBox! :)
-                            1. Create a file
-                            2. List all files
-                            Or "exit" to leave.
-                            """); System.out.flush();
-                    Sleeper.sleep(10000);
-                    String line=in.readLine().toLowerCase();
-                    if(line.startsWith("quit") || line.startsWith("exit"))
-                        break;
-                    else if(line.startsWith("1")){
-                        System.out.print("> Name your file\n");
-                        String fileName = in.readLine();
-                        //FileInputStream fileIn = new FileInputStream(fileName);
-                        PeerFile fileIn = new PeerFile(fileName);
-                        System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
-                        String data;
-                        do {
-                            /*byte[] buf = new byte[8096];
-                            int bytes=fileIn.*/
-                            byte[] buf = new byte[8096];
-                            data = in.readLine();
-                            buf = data.getBytes(StandardCharsets.UTF_8);
-                            fileIn.setData(buf);
-                            ObjectMessage message = new ObjectMessage(null,data);
+
+            if(!isNode) {
+                while (true) {
+                    try {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                        //File[] f = dir.listFiles();
+                        System.out.print("""
+                                > Welcome to our PeerBox! :)
+                                1. Create a file
+                                2. List all files
+                                Or "exit" to leave.
+                                """);
+                        System.out.flush();
+
+                        String line = in.readLine().toLowerCase();
+                        if (line.startsWith("quit") || line.startsWith("exit"))
+                            break;
+                        else if (line.startsWith("1")) {
+                            String text = String.format("Executed %s!", line);
+                            ObjectMessage message = new ObjectMessage(null, text);
                             channel.send(message);
-                        }while (!data.equals("s"));
-                        System.out.print("> Enter the path of the file\n");
-                        String path = in.readLine();
-                        System.out.print("> Enter the number of the replicas(per chunks)\n");
-                        int replicas = in.read();
-                        fileIn.save(path,replicas);
-                        logger.info("The file was saved in the path {} with {} replicas", path,replicas);
+                            System.out.print("> Enter the filename\n");
+                            String filename = in.readLine();
+                            System.out.print("> Enter the file path\n");
+                            String path = in.readLine();
+                            PeerFile fileIn = new PeerFile(new PeerFileID(filename, path));
+                            //System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
+
+                            System.out.print("> Enter the number of the replicas(per chunks)\n");
+                            int replicas = in.read();
+                            fileIn.save(path, replicas);
+                            logger.info("The file was saved in the path {} with {} replicas", path, replicas);
 
                         /*line=" Executed " + line;
                         System.out.print("> Enter the name of the file you which to save\n");
@@ -97,25 +88,22 @@ public class Main {
                         int replicas = in.read();
                         //peerBox.save(path,replicas);
                         logger.info("The file was saved in the path {} with {} replicas", path,replicas);*/
-                    }
-                    else if(line.startsWith("fetch")){
-                        line=" Executed " + line;
-                        System.out.print("> Enter the PeerFileID to retrieve the file\n");
-                        PeerFile id = null;
-                        int id2 = in.read();
+                        } else if (line.startsWith("fetch")) {
+                            line = " Executed " + line;
+                            System.out.print("> Enter the PeerFileID to retrieve the file\n");
+                            PeerFile id = null;
+                            int id2 = in.read();
                         /*assert false;
                         id.setFileId(id2);
                         peerBox.fetch(id);*/
+                        }
+                    } catch (PeerBoxException e) {
+                        logger.info("The node: {} is disconnecting", hostname);
+                        channel.close();
+                        break;
                     }
-                    ObjectMessage message = new ObjectMessage(null,line);
-                    channel.send(message);
-                    Sleeper.sleep(2000);
-                } catch (PeerBoxException e) {
-                    logger.info("The node: {} is disconnecting",hostname);
-                    channel.close();
-                    break;
                 }
-            }
+            } else {Sleeper.sleep(1000000);}
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

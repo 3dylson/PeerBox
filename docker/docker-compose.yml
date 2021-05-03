@@ -21,7 +21,7 @@ services:
       - ./logs:/logs
       - ../build/libs:/app
       - ../etc:/app/etc
-    command: java -Dlogback.configurationFile=/app/etc/logback.xml -jar /app/ds-assignment-1.0-SNAPSHOT.jar
+    command: java -Dlogback.configurationFile=/app/etc/logback.xml -jar /app/ds-assignment-1.0-SNAPSHOT.jar node
 
 networks:
   peerbox-network:

@@ -11,5 +11,19 @@ public class Chunk {
         this.chunkNo = chunkNo;
     }
 
+    public PeerFile getFileID() {
+        return fileID;
+    }
 
+    public void setFileID(PeerFile fileID) {
+        this.fileID = fileID;
+    }
+
+    public int getChunkNo() {
+        return chunkNo;
+    }
+
+    public void setChunkNo(int chunkNo) {
+        this.chunkNo = chunkNo;
+    }
 }
