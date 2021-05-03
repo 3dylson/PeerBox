@@ -4,7 +4,6 @@ import org.jgroups.JChannel;
 import org.jgroups.ObjectMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ipb.dsys.peerbox.common.PeerBox;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
@@ -14,15 +13,16 @@ import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
 
-    private JChannel channel;
-    PeerFile dir;
-    PeerBox peerBox;
+    Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
+    JChannel channel;
 
 
     public static void main(String[] args) {
@@ -69,7 +69,7 @@ public class Main {
                             String filename = in.readLine();
                             System.out.print("> Enter the file path\n");
                             String path = in.readLine();
-                            PeerFile fileIn = new PeerFile(new PeerFileID(filename, path));
+                            PeerFile fileIn = new PeerFile();
                             //System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
 
                             System.out.print("> Enter the number of the replicas(per chunks)\n");

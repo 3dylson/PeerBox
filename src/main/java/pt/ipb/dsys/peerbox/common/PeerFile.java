@@ -14,17 +14,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PeerFile implements PeerBox  {
 
 
-    JChannel channel;
-    Map<String, OutputStream> files = new ConcurrentHashMap<>();
-
-    private Collection<Chunk> chunks;
-
     private PeerFileID fileId;
     private byte[] data;
+    private Collection<Chunk> chunks;
+    JChannel channel;
 
 
-    public PeerFile(PeerFileID fileId) {
-        this.fileId = fileId;
+    public PeerFile() {
 
     }
 
@@ -45,6 +41,13 @@ public class PeerFile implements PeerBox  {
         this.data = data;
     }
 
+    public Collection<Chunk> getChunks() {
+        return chunks;
+    }
+
+    public void setChunks(Collection<Chunk> chunks) {
+        this.chunks = chunks;
+    }
 
     /**
      * Operations:
@@ -60,68 +63,16 @@ public class PeerFile implements PeerBox  {
     @Override
     public PeerFileID save(String path, int replicas) throws Exception {
 
-        //getFileId().setPath(path);
+        List<byte[]> data = Collections.singletonList(this.getData());
+        List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
 
-        String filename = this.getFileId().getFilename();
+        chunks.add((Chunk) data);
 
-        String filePath = this.getFileId().getPath();
-
-       // File file = new File(filePath);
-        FileOutputStream out = new FileOutputStream(filePath);
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-
-        /*file.setWritable(true);
-        file.setExecutable(true);
-        file.setReadable(true);*/
-
-
-
-
-        System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
-        String fdata;
-        for(;;) {
-            /*byte[] buf = new byte[8096];
-            out.write(buf);
-            int bytes = out.write(buf);*/
-            fdata = in.readLine();
-            out.write(fdata.getBytes());
-            if(fdata.equals("s"))
-                break;
-            this.setData(fdata.getBytes());
-        }
-
-        boolean bool = false;
-        //PeerFile file = new PeerFile(path,null);
-
-        //bool = file.exists();
-
-        //if(!bool){
-
-            List<byte[]> data = Collections.singletonList(this.getData());
-            List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
-            //chunks.add((Chunk) splitedData);
-
-            int i=0;
-            while(i++<replicas) {
-                //Message msg = new Message(null, splitedData);
-                //channel.send((Message) splitedData);
-                ObjectMessage msg = new ObjectMessage(null,splitedData);
-                channel.send(msg);
+        int i=0;
+        while(i++<replicas) {
+            ObjectMessage msg = new ObjectMessage(null,splitedData);
+            channel.send(msg);
             }
-
-        /*} else{
-            System.out.print("This file already exists!");
-        }*/
-
-        //Example:
-        /*Person p=new Person("Bela Ban", 322649, array);
-        Message msg=new ObjectMessage(dest, p);
-        channel.send(msg)
-
-        // or
-
-        msg=new ObjectMessage(null, "hello world");
-        channel.send(msg);*/
 
         return fileId;
     }
