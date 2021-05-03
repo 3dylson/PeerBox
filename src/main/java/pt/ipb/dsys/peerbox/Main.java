@@ -38,7 +38,7 @@ public class Main {
 
             channel.connect(CLUSTER_NAME);
             channel.setReceiver(new LoggingReceiver());
-            //channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
+            channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
             //channel.getState(null, 10000);
 
             String hostname = DnsHelper.getHostName();
