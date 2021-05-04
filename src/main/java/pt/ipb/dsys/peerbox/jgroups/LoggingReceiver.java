@@ -4,9 +4,11 @@ import org.jgroups.*;
 import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ipb.dsys.peerbox.common.Chunk;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +18,8 @@ public class LoggingReceiver implements Receiver {
 
     JChannel channel;
     final List<Address> members =new LinkedList<Address>();
+    List<PeerFile> requestQueue;
+    List<Chunk> acknowledgementQueue;
 
     public enum STATES {
         READY, WAITING, CRITICAL
@@ -26,6 +30,14 @@ public class LoggingReceiver implements Receiver {
 
     public List<Address> getMembers() {
         return members;
+    }
+
+    public STATES getState() {
+        return state;
+    }
+
+    public void setState(STATES state) {
+        this.state = state;
     }
 
     /**
@@ -58,6 +70,11 @@ public class LoggingReceiver implements Receiver {
            if(state == STATES.READY) {
                sendFile((PeerFile) message);
            }
+
+           else if (state == STATES.WAITING) {
+               requestQueue.add((PeerFile) message);
+               processPendingRequests();
+           }
        }
 
     }
@@ -81,6 +98,23 @@ public class LoggingReceiver implements Receiver {
                 logger.error("File not sent!");
             }
         }
+    }
+
+    /**
+     * Processes pending (delayed) requests
+     * */
+    private void processPendingRequests(){
+        List<PeerFile> requestQ;
+        do {
+            requestQ = new ArrayList<PeerFile>(requestQueue);
+            //Collections.sort(requestQ);
+            for (PeerFile request : requestQ) {
+                sendFile(request);
+            }
+        }
+        while (!requestQ.equals(requestQueue));
+
+        requestQueue.clear();
     }
 
 

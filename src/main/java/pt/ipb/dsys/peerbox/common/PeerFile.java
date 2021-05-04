@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class PeerFile implements PeerBox  {
+public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
 
 
     private PeerFileID fileId;
@@ -114,12 +114,15 @@ public class PeerFile implements PeerBox  {
     @Override
     public PeerFile fetch(PeerFileID id) throws PeerBoxException {
 
+        receiver.setState(LoggingReceiver.STATES.WAITING);
+
         try {
             PeerFile request = new PeerFile(id);
             channel.send(null, request);
 
         } catch (Exception e) {
             e.printStackTrace();
+            receiver.setState(LoggingReceiver.STATES.READY);
         }
 
         return null;
@@ -158,5 +161,21 @@ public class PeerFile implements PeerBox  {
     @Override
     public PeerFileID data(String path) throws PeerBoxException {
         return null;
+    }
+
+    /**
+     * Compares requests to see which one has the earliest timestamp
+     * If the timestamps can't be compared, compares the GUIDs*/
+    @Override
+    public int compareTo(PeerFileID other) {
+        if (other.getTimestamp() < this.getFileId().getTimestamp()) {
+            return -1;
+        }
+        else if (other.getTimestamp() > this.getFileId().getTimestamp()) {
+            return 1;
+        }
+        else {
+            return other.getGUID().compareTo(this.getFileId().getGUID());
+        }
     }
 }
