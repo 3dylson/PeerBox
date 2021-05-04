@@ -7,8 +7,6 @@ import org.jgroups.JChannel;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PeerFile implements PeerBox  {
 
@@ -16,7 +14,7 @@ public class PeerFile implements PeerBox  {
     private PeerFileID fileId;
     private byte[] data;
     private Collection<Chunk> chunks;
-    private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
+    //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
 
 
@@ -63,6 +61,7 @@ public class PeerFile implements PeerBox  {
         this.chunks = chunks;
     }
 
+
     /**
      * Operations:
      * - Splits `data` in BLOCK_SIZE chunks
@@ -93,6 +92,7 @@ public class PeerFile implements PeerBox  {
                 int i=0;
                 while (i++<replicas) {
                     PeerFile msg = new PeerFile(getFileId(), splitedData);
+                    msg.getFileId().setPath(path);
                     channel.send(address, msg);
                 }
             }
@@ -124,7 +124,8 @@ public class PeerFile implements PeerBox  {
             e.printStackTrace();
         }
 
-        return files.get(id);
+        return null;
+       // return files.get(id);
     }
 
     /**
@@ -136,9 +137,9 @@ public class PeerFile implements PeerBox  {
     @Override
     public void delete(PeerFileID id) throws PeerBoxException {
 
-        synchronized (files){
+        /*synchronized (files){
             files.remove(id);
-        }
+        }*/
 
     }
 
@@ -149,11 +150,11 @@ public class PeerFile implements PeerBox  {
     @Override
     public void listFiles() {
 
-        synchronized (files){
+        /*synchronized (files){
             for(Map.Entry<PeerFileID,PeerFile> entry: files.entrySet()){
                 System.out.println(entry.getKey() + ": " + entry.getValue());
             }
-        }
+        }*/
     }
 
     @Override

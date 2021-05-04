@@ -1,84 +1,63 @@
 package pt.ipb.dsys.peerbox.jgroups;
 
+import org.jgroups.Address;
+import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.Receiver;
-import org.jgroups.View;
-import org.jgroups.util.Util;
+import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.LinkedList;
-import java.util.List;
+import pt.ipb.dsys.peerbox.common.PeerFile;
+import pt.ipb.dsys.peerbox.common.PeerFileID;
 
 public class LoggingReceiver implements Receiver {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
-    /*public enum STATES {
+    JChannel channel;
+
+    public enum STATES {
         READY, WAITING, CRITICAL
     }
 
     private STATES state = STATES.READY;
-    private long timestamp = 0;*/
+    private long timestamp = 0;
 
-    final List<String> state = new LinkedList<String>();
 
     @Override
     public void receive(Message msg) {
-        logger.info("Message from {} to {}: {}", msg.src(), msg.dest(), msg.getObject());
+       Object message = msg.getObject();
+       if(message instanceof PeerFile) {
+           // Increments the logical clock timestamp whenever a request is received
+           timestamp++;
 
-        /*String line = msg.getSrc() + ": " + msg.getObject();
-        logger.info(line);
-        synchronized (state){
-            state.add(line);
-        }*/
+           if(state == STATES.READY) {
+               sendFile((PeerFile) message);
+           }
+       }
 
     }
 
-    @Override
-    public void viewAccepted(View view) {
-        logger.info("New View : {}", view);
-    }
+    private void sendFile(PeerFile request) {
+        UUID destination = null;
 
-    /**
-     * Allows an application to write the state to an OutputStream. After the state has
-     * been written, the OutputStream doesn't need to be closed as stream closing is automatically
-     * done when a calling thread returns from this callback.
-     *
-     * @param output The OutputStream
-     * @throws Exception If the streaming fails, any exceptions should be thrown so that the state requester
-     *                   can re-throw them and let the caller know what happened
-     */
-    @Override
-    public void getState(OutputStream output) throws Exception {
-        synchronized (state){
-            Util.objectToStream(state, new DataOutputStream(output));
+        // Gets the destination by comparing the request's GUID with every GUID in the cluster
+        for (Address address : channel.getView().getMembers()) {
+            UUID addressUUID = (UUID) address;
+            if (addressUUID.toStringLong().equals(request.getFileId().getGUID())) {
+                destination = addressUUID;
+            }
+        }
+        if (destination !=null){
+            try{
+                PeerFile file = new PeerFile(new PeerFileID(channel.getAddressAsString()));
+                channel.send(destination,file);
+                logger.info("Sent a File to {}",destination.toStringLong());
+            }catch (Exception e) {
+                logger.error("File not sent!");
+            }
         }
     }
 
-    /**
-     * Allows an application to read the state from an InputStream. After the state has been
-     * read, the InputStream doesn't need to be closed as stream closing is automatically done when a
-     * calling thread returns from this callback.
-     *
-     * @param input The InputStream
-     * @throws Exception If the streaming fails, any exceptions should be thrown so that the state requester
-     *                   can catch them and thus know what happened
-     */
-    @Override
-    public void setState(InputStream input) throws Exception {
-        List<String> list;
-        list=(List<String>)Util.objectFromStream(new DataInputStream(input));
-        synchronized(state) {
-            state.clear();
-            state.addAll(list);
-        }
-        logger.info(list.size() + " messages in file history):");
-        for(String str: list) {
-            logger.info(str);
-        }
-    }
+
 }

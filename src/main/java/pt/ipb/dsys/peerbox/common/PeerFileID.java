@@ -17,6 +17,10 @@ public class PeerFileID implements Serializable {
 
     }
 
+    public PeerFileID(String GUID) {
+        this.GUID = GUID;
+    }
+
     public PeerFileID(String GUID, String filename, String path, long timestamp) {
         this.GUID = GUID;
         this.filename = filename;
