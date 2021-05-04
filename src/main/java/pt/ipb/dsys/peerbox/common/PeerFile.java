@@ -1,10 +1,9 @@
 package pt.ipb.dsys.peerbox.common;
 
 import com.google.common.collect.Lists;
+import org.jgroups.Address;
 import org.jgroups.JChannel;
-import org.jgroups.ObjectMessage;
 
-import java.io.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,12 +16,27 @@ public class PeerFile implements PeerBox  {
     private PeerFileID fileId;
     private byte[] data;
     private Collection<Chunk> chunks;
+    private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
 
 
     public PeerFile() {
 
     }
+
+    public PeerFile(PeerFileID fileId) {
+        this.fileId = fileId;
+    }
+
+    public PeerFile(PeerFileID fileId, byte[] data) {
+        this.fileId = fileId;
+        this.data = data;
+    }
+
+    public PeerFile(PeerFileID fileId, List<List<byte[]>> splitedData) {
+
+    }
+
 
     public PeerFileID getFileId() {
         return fileId;
@@ -61,18 +75,30 @@ public class PeerFile implements PeerBox  {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFileID save(String path, int replicas) throws Exception {
+    public PeerFileID save(String path, int replicas) throws PeerBoxException {
 
         List<byte[]> data = Collections.singletonList(this.getData());
         List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
 
-        chunks.add((Chunk) data);
+        chunks.add((Chunk) splitedData);
 
-        int i=0;
+        /*int i=0;
         while(i++<replicas) {
             ObjectMessage msg = new ObjectMessage(null,splitedData);
             channel.send(msg);
+            }*/
+
+        try {
+            for (Address address : channel.getView().getMembers()) {
+                int i=0;
+                while (i++<replicas) {
+                    PeerFile msg = new PeerFile(getFileId(), splitedData);
+                    channel.send(address, msg);
+                }
             }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
         return fileId;
     }
@@ -88,14 +114,17 @@ public class PeerFile implements PeerBox  {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFile fetch(PeerFileID id) throws Exception {
+    public PeerFile fetch(PeerFileID id) throws PeerBoxException {
 
-        /*Address address = id;
-        channel.getAddress();
-        PeerFile file = new PeerFile(ID);
-        channel.send(null, file);*/
+        try {
+            PeerFile request = new PeerFile(id);
+            channel.send(null, request);
 
-        return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return files.get(id);
     }
 
     /**
@@ -107,17 +136,24 @@ public class PeerFile implements PeerBox  {
     @Override
     public void delete(PeerFileID id) throws PeerBoxException {
 
+        synchronized (files){
+            files.remove(id);
+        }
+
     }
 
     /**
      * Shows all the files stored in peer box
      *
-     * @return
      */
     @Override
-    public File[] listFiles() {
-        //File dir = new File("dropdown");
-        return null;
+    public void listFiles() {
+
+        synchronized (files){
+            for(Map.Entry<PeerFileID,PeerFile> entry: files.entrySet()){
+                System.out.println(entry.getKey() + ": " + entry.getValue());
+            }
+        }
     }
 
     @Override
