@@ -3,6 +3,7 @@ package pt.ipb.dsys.peerbox.common;
 import com.google.common.collect.Lists;
 import org.jgroups.Address;
 import org.jgroups.JChannel;
+import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,7 @@ public class PeerFile implements PeerBox  {
     private Collection<Chunk> chunks;
     //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
+    LoggingReceiver receiver;
 
 
     public PeerFile() {
@@ -81,17 +83,12 @@ public class PeerFile implements PeerBox  {
 
         chunks.add((Chunk) splitedData);
 
-        /*int i=0;
-        while(i++<replicas) {
-            ObjectMessage msg = new ObjectMessage(null,splitedData);
-            channel.send(msg);
-            }*/
-
         try {
-            for (Address address : channel.getView().getMembers()) {
+            for (Address address : receiver.getMembers()) {
                 int i=0;
                 while (i++<replicas) {
-                    PeerFile msg = new PeerFile(getFileId(), splitedData);
+                    Collections.shuffle((List<?>) chunks);
+                    PeerFile msg = new PeerFile(getFileId(), (List<List<byte[]>>) ((List<Chunk>) chunks).get(0));
                     msg.getFileId().setPath(path);
                     channel.send(address, msg);
                 }
@@ -99,6 +96,7 @@ public class PeerFile implements PeerBox  {
         } catch (Exception e){
             e.printStackTrace();
         }
+
 
         return fileId;
     }
