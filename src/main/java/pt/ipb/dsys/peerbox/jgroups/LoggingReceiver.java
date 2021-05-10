@@ -4,7 +4,9 @@ import org.jgroups.*;
 import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ipb.dsys.peerbox.Main;
 import pt.ipb.dsys.peerbox.common.Chunk;
+import pt.ipb.dsys.peerbox.common.PeerBox;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
@@ -65,6 +67,7 @@ public class LoggingReceiver implements Receiver {
        Object message = msg.getObject();
        if(message instanceof PeerFile) {
            // Increments the logical clock timestamp whenever a request is received
+           logger.info("Received {} from {}", message, msg.getSrc());
            timestamp++;
 
            if(state == STATES.READY) {
@@ -74,6 +77,11 @@ public class LoggingReceiver implements Receiver {
            else if (state == STATES.WAITING) {
                requestQueue.add((PeerFile) message);
                processPendingRequests();
+           }
+
+           else {
+
+
            }
        }
 

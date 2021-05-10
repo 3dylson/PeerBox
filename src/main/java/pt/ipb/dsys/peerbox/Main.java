@@ -74,8 +74,8 @@ public class Main {
                             PeerFile file = new PeerFile(ID);
                             System.out.print("> Enter the number of the replicas(per chunks)\n");
                             int replicas = in.read();
-                            file.save(path, replicas);
                             files.put(file.getFileId(),file);
+                            file.save(path, replicas);
                             //System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
                             logger.info("The file was saved in the path {} with {} replicas", path, replicas);
                         } else if (line.startsWith("2")) {
@@ -94,7 +94,17 @@ public class Main {
                         break;
                     }
                 }
-            } else {Sleeper.sleep(1000000);}
+            } else {
+                while (true) {
+                    try{
+                        //TODO update view!
+                        logger.info("I am a node! {}",hostname);
+                        Sleeper.sleep(300000);
+                    } catch (Exception e) {
+                        logger.warn("I have disconected! {}",hostname);
+                    }
+                }
+            }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

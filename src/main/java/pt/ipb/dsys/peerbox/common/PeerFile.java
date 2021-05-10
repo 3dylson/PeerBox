@@ -17,7 +17,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
     private Collection<Chunk> chunks;
     //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
-    LoggingReceiver receiver;
+    LoggingReceiver receiver = new LoggingReceiver();
 
 
     public PeerFile() {
@@ -34,7 +34,8 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
     }
 
     public PeerFile(PeerFileID fileId, List<List<byte[]>> splitedData) {
-
+        this.fileId = fileId;
+        chunks.add((Chunk) splitedData);
     }
 
 
@@ -81,14 +82,23 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
         List<byte[]> data = Collections.singletonList(this.getData());
         List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
 
-        chunks.add((Chunk) splitedData);
+        //chunks.add((Chunk) splitedData);
+        //Chunk chunk = new Chunk(this.fileId,i)
+        //this.getChunks().add((Chunk) splitedData);
+
+        /*int n=0;
+        while (n++<replicas){
+            Chunk chunk = new Chunk(this,n, splitedData);
+            chunks.add(chunk);
+        }*/
 
         try {
-            for (Address address : receiver.getMembers()) {
+            for (Address address : this.receiver.getMembers()) {
                 int i=0;
                 while (i++<replicas) {
-                    Collections.shuffle((List<?>) chunks);
-                    PeerFile msg = new PeerFile(getFileId(), (List<List<byte[]>>) ((List<Chunk>) chunks).get(0));
+                    Collections.shuffle(splitedData);
+                    chunks.add(new Chunk(this,i,splitedData));
+                    PeerFile msg = new PeerFile(getFileId(), Collections.singletonList(splitedData.get(0)));
                     msg.getFileId().setPath(path);
                     channel.send(address, msg);
                 }
