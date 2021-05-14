@@ -23,7 +23,7 @@ public class Main {
     private long timestamp = 0;
 
     final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
-    JChannel channel;
+
 
 
     public static void main(String[] args) {
@@ -110,11 +110,6 @@ public class Main {
         }
     }
 
-
-    // Returns the number of connected nodes in the cluster
-    private int clusterSize() {
-        return channel.getView().getMembers().size();
-    }
 
 
 }

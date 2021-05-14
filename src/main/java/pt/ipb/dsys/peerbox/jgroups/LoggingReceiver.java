@@ -11,6 +11,7 @@ import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class LoggingReceiver implements Receiver {
     JChannel channel;
     final List<Address> members =new LinkedList<Address>();
     List<PeerFile> requestQueue;
-    List<Chunk> acknowledgementQueue;
+    Collection<Chunk> chunks;
 
     public enum STATES {
         READY, WAITING, CRITICAL
@@ -79,10 +80,12 @@ public class LoggingReceiver implements Receiver {
                processPendingRequests();
            }
 
-           else {
+       }
 
-
-           }
+       else if (message instanceof Chunk) {
+           chunks.add((Chunk) message);
+           logger.info("Received chunk number {}, of the file {}, from {} ", ((Chunk) message).getChunkNo(),
+                   ((Chunk) message).getFileID().getFileId().getFilename(), msg.getSrc() );
        }
 
     }
@@ -108,6 +111,32 @@ public class LoggingReceiver implements Receiver {
         }
     }
 
+    private void sendChunk(PeerFile request) {
+        UUID destination = null;
+
+        // Gets the destination by comparing the request's GUID with every GUID in the cluster
+        for (Address address : channel.getView().getMembers()) {
+            UUID addressUUID = (UUID) address;
+            if (addressUUID.toStringLong().equals(request.getFileId().getGUID())) {
+                destination = addressUUID;
+            }
+        }
+        if (destination !=null){
+            try{
+                PeerFile file = new PeerFile(new PeerFileID(channel.getAddressAsString()));
+                for (int i = 0; i <= chunks.size(); i++);
+                {
+                    if (chunks.contains(file.getChunks()));
+                }
+                file.setChunks(chunks);
+                channel.send(destination,file);
+                logger.info("Sent a File to {}",destination.toStringLong());
+            }catch (Exception e) {
+                logger.error("File not sent!");
+            }
+        }
+    }
+
     /**
      * Processes pending (delayed) requests
      * */
@@ -123,6 +152,11 @@ public class LoggingReceiver implements Receiver {
         while (!requestQ.equals(requestQueue));
 
         requestQueue.clear();
+    }
+
+    // Returns the number of connected nodes in the cluster
+    private int clusterSize() {
+        return channel.getView().getMembers().size();
     }
 
 
