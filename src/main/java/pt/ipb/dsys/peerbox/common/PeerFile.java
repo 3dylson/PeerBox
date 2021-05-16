@@ -6,6 +6,7 @@ import org.jgroups.JChannel;
 import org.jgroups.Receiver;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +16,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
 
     private PeerFileID fileId;
     private byte[] data;
-    private Collection<Chunk> chunks;
+    private Collection<Chunk> chunks = new ArrayList<Chunk>();
 
     //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
@@ -26,8 +27,9 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
 
     }
 
-    public PeerFile(PeerFileID fileId) {
+    public PeerFile(PeerFileID fileId, Collection<Chunk> chunks) {
         this.fileId = fileId;
+        this.chunks = chunks;
     }
 
     public PeerFile(PeerFileID fileId, byte[] data) {
@@ -40,6 +42,15 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
         chunks.add((Chunk) splitedData);
     }
 
+    public PeerFile(PeerFileID fileId, byte[] data, Collection<Chunk> chunks) {
+        this.fileId = fileId;
+        this.data = data;
+        this.chunks = chunks;
+    }
+
+    public PeerFile(PeerFileID peerFileID) {
+        fileId = peerFileID;
+    }
 
     public PeerFileID getFileId() {
         return fileId;

@@ -9,6 +9,7 @@ public class Chunk {
     int MAX_SIZE = 64;
     private List<List<byte[]>> splitedData;
 
+
     public Chunk(PeerFile fileID) {
         this.fileID = fileID;
     }
@@ -18,6 +19,7 @@ public class Chunk {
         this.chunkNo = chunkNo;
         this.splitedData = splitedData;
     }
+
 
     public PeerFile getFileID() {
         return fileID;

@@ -4,6 +4,7 @@ import org.jgroups.JChannel;
 import org.jgroups.ObjectMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ipb.dsys.peerbox.common.Chunk;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
@@ -12,7 +13,9 @@ import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,6 +75,17 @@ public class Main {
                             String path = in.readLine();
                             PeerFileID ID = new PeerFileID(GUID,filename,path,timestamp);
                             PeerFile file = new PeerFile(ID);
+
+                            System.out.print("> Enter the file content\n");
+                            FileInputStream inF =new FileInputStream(file.getFileId().getFilename());
+                            for(;;) {
+                                byte[] buf = new byte[8096];
+                                int bytes = inF.read(buf);
+                                if(bytes == -1)
+                                    break;
+                                file.setData(buf);
+                            }
+
                             System.out.print("> Enter the number of the replicas(per chunks)\n");
                             int replicas = in.read();
                             files.put(file.getFileId(),file);
@@ -98,7 +112,10 @@ public class Main {
                 while (true) {
                     try{
                         //TODO update view!
-                        logger.info("I am a node! {}",hostname);
+                        //logger.info("I am a node! {}",hostname);
+                        String text = String.format("Hello from %s!", hostname);
+                        ObjectMessage message = new ObjectMessage(null, text);
+                        channel.send(message);
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
                         logger.warn("I have disconected! {}",hostname);
