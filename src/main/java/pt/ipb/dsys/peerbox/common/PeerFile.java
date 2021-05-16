@@ -20,7 +20,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
 
     //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
-    LoggingReceiver receiver; //= new LoggingReceiver();
+    LoggingReceiver receiver = new LoggingReceiver();
 
 
     public PeerFile() {
@@ -95,9 +95,10 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
         List<byte[]> data = Collections.singletonList(this.getData());
         List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
 
-        int size = splitedData.size();
+        int size = splitedData.lastIndexOf(data);
         for (int i = 0; i <= size; i++){
-            chunks.add((new Chunk(this,i, Collections.singletonList(splitedData.get(i)))) );
+            //new Chunk(this,i, Collections.singletonList(splitedData.get(i)));
+            chunks.add(new Chunk(this,i, Collections.singletonList(splitedData.get(i))));
         }
 
         //chunks.add((Chunk) splitedData);

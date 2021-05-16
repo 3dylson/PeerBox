@@ -12,9 +12,8 @@ import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -76,22 +75,43 @@ public class Main {
                             PeerFileID ID = new PeerFileID(GUID,filename,path,timestamp);
                             PeerFile file = new PeerFile(ID);
 
+                            File dir = new File(path);
+                            File sysFile = new File(path+"\\"+filename);
                             System.out.print("> Enter the file content\n");
-                            FileInputStream inF =new FileInputStream(file.getFileId().getFilename());
-                            for(;;) {
-                                byte[] buf = new byte[8096];
-                                int bytes = inF.read(buf);
-                                if(bytes == -1)
-                                    break;
-                                file.setData(buf);
+                            if (!sysFile.exists()){
+                                dir.mkdir();
+                                sysFile.createNewFile();
                             }
+                            FileOutputStream inF = new FileOutputStream(sysFile);
+                            try{
+                                String content;
+                                do {
+                                    content = in.readLine();
+                                    inF.write(content.getBytes());
+                                } while (!content.endsWith("exit"));
+                                inF.close();
+                                FileInputStream out = new FileInputStream(sysFile);
+                                byte[] fileContent = out.readAllBytes();
+                                file.setData(fileContent);
 
-                            System.out.print("> Enter the number of the replicas(per chunks)\n");
-                            int replicas = in.read();
-                            files.put(file.getFileId(),file);
-                            file.save(path, replicas);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            finally {
+                                System.out.print("> Enter the number of the replicas(per chunks)\n");
+                                int replicas = in.read();
+                                files.put(file.getFileId(),file);
+                                file.save(path, replicas);
+                                logger.info("The file was saved in the path {} with {} replicas", path, replicas);
+                                //file.setData(buf);
+                            }
+                            /*while(bu)
+                            byte[] buf = new byte[8096];
+                            int bytes = inF.read(buf);
+
+                            file.setData(buf);*/
+
                             //System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
-                            logger.info("The file was saved in the path {} with {} replicas", path, replicas);
                         } else if (line.startsWith("2")) {
                             String text = "Executed Listing!";
                             ObjectMessage message = new ObjectMessage(null, text);
