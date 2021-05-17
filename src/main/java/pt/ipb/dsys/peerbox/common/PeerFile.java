@@ -113,7 +113,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
         }*/
         for (Chunk chunk : chunks) {
             try{
-                List<Address> receivers = receiver.getMembers();
+                List<Address> receivers = channel.getView().getMembers();
                 if(receivers.isEmpty()){
                     System.out.println("There's no receivers!");
                     break;
