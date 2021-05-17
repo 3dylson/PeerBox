@@ -2,19 +2,20 @@ package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
 import org.jgroups.ObjectMessage;
+import org.jgroups.View;
+import org.jgroups.ViewId;
+import org.jgroups.blocks.cs.Receiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ipb.dsys.peerbox.common.Chunk;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
+import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +30,7 @@ public class Main {
 
 
     public static void main(String[] args) {
+        PeerUtil.localhostFix();
         boolean isNode = args.length > 0 && args[0].equals("node");
         new Main().initializeCluster(isNode);
 
@@ -41,7 +43,7 @@ public class Main {
 
             channel.connect(CLUSTER_NAME);
             channel.setReceiver(new LoggingReceiver());
-            //channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
+            channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
             //channel.getState(null, 10000);
 
             String hostname = DnsHelper.getHostName();
@@ -132,6 +134,7 @@ public class Main {
                 while (true) {
                     try{
                         //TODO update view!
+
                         //logger.info("I am a node! {}",hostname);
                         String text = String.format("Hello from %s!", hostname);
                         ObjectMessage message = new ObjectMessage(null, text);

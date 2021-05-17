@@ -50,6 +50,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
 
     public PeerFile(PeerFileID peerFileID) {
         fileId = peerFileID;
+        //channel.setReceiver(receiver);
     }
 
     public PeerFileID getFileId() {
@@ -110,17 +111,21 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
             Chunk chunk = new Chunk(this,n, splitedData);
             chunks.add(chunk);
         }*/
-
         for (Chunk chunk : chunks) {
             try{
                 List<Address> receivers = receiver.getMembers();
+                if(receivers.isEmpty()){
+                    System.out.println("There's no receivers!");
+                    break;
+                }
+                receivers.forEach(System.out::println);
                 //receivers.add((Address) receiver.getMembers());
                 int r=0;
                 while (r++<replicas){
                     Collections.shuffle(receivers);
 //                    channel.setReceiver((Receiver) receivers.get(0));
-                    channel.send(receivers.get(0),chunk);
-                    receivers.remove(0);
+                    channel.send(receivers.get(r),chunk);
+                    receivers.remove(r);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

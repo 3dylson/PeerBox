@@ -66,6 +66,11 @@ public class LoggingReceiver implements Receiver {
     @Override
     public void receive(Message msg) {
        Object message = msg.getObject();
+       String line = "Message received from: "
+                + msg.getSrc()
+                + " to: " + msg.getDest()
+                + " -> " + message;
+        System.out.println(line);
        if(message instanceof PeerFile) {
            // Increments the logical clock timestamp whenever a request is received
            logger.info("Received {} from {}", message, msg.getSrc());
