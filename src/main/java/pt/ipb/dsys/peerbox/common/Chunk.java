@@ -1,8 +1,11 @@
 package pt.ipb.dsys.peerbox.common;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Chunk {
+public class Chunk implements Serializable {
+
+    public static final long serialVersionUID = 1L;
 
     private PeerFile fileID;
     private int chunkNo;
@@ -35,5 +38,13 @@ public class Chunk {
 
     public void setChunkNo(int chunkNo) {
         this.chunkNo = chunkNo;
+    }
+
+    public List<List<byte[]>> getSplitedData() {
+        return splitedData;
+    }
+
+    public void setSplitedData(List<List<byte[]>> splitedData) {
+        this.splitedData = splitedData;
     }
 }

@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
 
+
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     private long timestamp = 0;
@@ -76,6 +77,7 @@ public class Main {
                             String path = in.readLine();
                             PeerFileID ID = new PeerFileID(GUID,filename,path,timestamp);
                             PeerFile file = new PeerFile(ID);
+                            file.setChannel(channel);
 
                             File dir = new File(path);
                             File sysFile = new File(path+"\\"+filename);

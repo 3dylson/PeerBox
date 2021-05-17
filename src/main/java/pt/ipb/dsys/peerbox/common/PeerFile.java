@@ -1,17 +1,20 @@
 package pt.ipb.dsys.peerbox.common;
 
 import com.google.common.collect.Lists;
-import org.jgroups.Address;
-import org.jgroups.JChannel;
-import org.jgroups.Receiver;
+import org.jgroups.*;
+import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.*;
 
-public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
+import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
+
+public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
+
+    public static final long serialVersionUID = 1L;
 
 
     private PeerFileID fileId;
@@ -50,6 +53,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
 
     public PeerFile(PeerFileID peerFileID) {
         fileId = peerFileID;
+        //channel.connect(CLUSTER_NAME);
         //channel.setReceiver(receiver);
     }
 
@@ -78,6 +82,13 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
         this.chunks = chunks;
     }
 
+    public JChannel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(JChannel channel) {
+        this.channel = channel;
+    }
 
     /**
      * Operations:
@@ -102,52 +113,27 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
             chunks.add(new Chunk(this,i, Collections.singletonList(splitedData.get(i))));
         }
 
-        //chunks.add((Chunk) splitedData);
-        //Chunk chunk = new Chunk(this.fileId,i)
-        //this.getChunks().add((Chunk) splitedData);
-
-        /*int n=0;
-        while (n++<replicas){
-            Chunk chunk = new Chunk(this,n, splitedData);
-            chunks.add(chunk);
-        }*/
         for (Chunk chunk : chunks) {
             try{
-                List<Address> receivers = channel.getView().getMembers();
+                ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
                 if(receivers.isEmpty()){
                     System.out.println("There's no receivers!");
                     break;
                 }
-                receivers.forEach(System.out::println);
-                //receivers.add((Address) receiver.getMembers());
+                //receivers.forEach(System.out::println);
+                int v = receivers.size();
+                System.out.println("There's "+v+" receivers!");
                 int r=0;
-                while (r++<replicas){
-                    Collections.shuffle(receivers);
-//                    channel.setReceiver((Receiver) receivers.get(0));
-                    channel.send(receivers.get(r),chunk);
-                    receivers.remove(r);
+                Collections.shuffle(receivers);
+                for (Address randomAddress : receivers){
+                    while (r++<=replicas) {
+                        channel.send(new ObjectMessage(randomAddress, this.getChunks().contains(chunk)));
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-        /*try {
-            for (Address address : receiver.getMembers()) {
-                int i=0;
-                while (i++<replicas) {
-                    *//*Collections.shuffle(splitedData);
-                    chunks.add(new Chunk(this,i,splitedData));*//*
-
-                    PeerFile msg = new PeerFile(getFileId(), Collections.singletonList(splitedData.get(0)));
-                    msg.getFileId().setPath(path);
-                    channel.send(address, msg);
-                }
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }*/
-
 
         return fileId;
     }
@@ -163,7 +149,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>  {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFile fetch(PeerFileID id) throws PeerBoxException {
+    public PeerFile fetch(PeerFileID id) throws Exception {
 
         receiver.setState(LoggingReceiver.STATES.WAITING);
 
