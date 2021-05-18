@@ -1,6 +1,6 @@
 ## Setup
 
-If you have no idea what is JGroups, check this
+If you have no idea what JGroups is, check this
 [_link_](http://www.jgroups.org/index.html).
 
 ### Prerequesites
