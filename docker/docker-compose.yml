@@ -18,6 +18,7 @@ services:
     networks:
       - peerbox-network
     volumes:
+      - ./files/peerFiles/:/tmp/
       - ./logs:/logs
       - ../build/libs:/app
       - ../etc:/app/etc
