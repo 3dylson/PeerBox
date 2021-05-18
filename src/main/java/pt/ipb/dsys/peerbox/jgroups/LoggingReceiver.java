@@ -26,7 +26,7 @@ public class LoggingReceiver implements Receiver {
     final Map<String, OutputStream> files = new ConcurrentHashMap<>();
 
     public enum STATES {
-        READY, WAITING, NULL
+        READY, WAITING, NULL, DELETE
     }
 
     private STATES state = STATES.NULL;
@@ -71,11 +71,11 @@ public class LoggingReceiver implements Receiver {
     @Override
     public void receive(Message msg) {
        Object message = msg.getObject();
-       String line = "Message received from: "
+       /*String line = "Message received from: "
                 + msg.getSrc()
                 + " to: " + msg.getDest()
                 + " -> " + message;
-        System.out.println(line);
+        System.out.println(line);*/
        if(message instanceof PeerFileID) {
            // Increments the logical clock timestamp whenever a request is received
            timestamp++;
@@ -95,9 +95,25 @@ public class LoggingReceiver implements Receiver {
                }
            }
 
-           if(state == STATES.READY) {
+           else if (state == STATES.DELETE){
+               OutputStream out = files.get(((PeerFileID) message).getFilename());
+               if (out == null){
+                   System.out.println("-- file doesn't exists! \n");
+               }
+               synchronized (files){
+                   files.remove(((PeerFileID) message).getFilename());
+                   System.out.println("-- deleting file "+out+"\n");
+               }
+           }
+
+       }
+
+       else if(message instanceof PeerFile) {
+
+           if(state == STATES.WAITING) {
                sendChunk((PeerFile) message);
            }
+
        }
 
        else if (message instanceof Chunk) {

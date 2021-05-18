@@ -128,7 +128,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
                 //Collections.shuffle(receivers);
                 for (Address address : receivers){
                     while (r++<=replicas) {
-                        channel.send(new ObjectMessage(address, this.getChunks().contains(chunk)));
+                        channel.send(new ObjectMessage(address, this.chunks.contains(chunk)));
                     }
                 }
             } catch (Exception e) {
@@ -164,14 +164,13 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
                 channel.send(null, r_chunk.get(i));
             }*/
             channel.send(null,request);
+            System.out.println("Waiting for chunks...");
+            Sleeper.sleep(10000);
 
         } catch (Exception e) {
             e.printStackTrace();
-            receiver.setState(LoggingReceiver.STATES.READY);
-            System.out.println("Waiting for chunks...");
-            Sleeper.sleep(10000);
-            receiver.setState(LoggingReceiver.STATES.NULL);
         }
+        receiver.setState(LoggingReceiver.STATES.NULL);
 
         return request;
        // return files.get(id);
@@ -186,9 +185,17 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
     @Override
     public void delete(PeerFileID id) throws PeerBoxException {
 
-        /*synchronized (files){
-            files.remove(id);
-        }*/
+        receiver.setState(LoggingReceiver.STATES.DELETE);
+        PeerFile request = new PeerFile(id);
+
+        try{
+            channel.send(null,request);
+            System.out.println("Sending delete msg...");
+            Sleeper.sleep(10000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        receiver.setState(LoggingReceiver.STATES.NULL);
 
     }
 

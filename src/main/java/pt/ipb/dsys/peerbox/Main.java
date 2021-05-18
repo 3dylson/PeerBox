@@ -2,9 +2,6 @@ package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
 import org.jgroups.ObjectMessage;
-import org.jgroups.View;
-import org.jgroups.ViewId;
-import org.jgroups.blocks.cs.Receiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
@@ -17,8 +14,6 @@ import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.*;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
 
@@ -48,6 +43,9 @@ public class Main {
             String hostname = DnsHelper.getHostName();
             String path = ("\\tmp\\");
             File dir = new File(path);
+            if (!dir.exists()){
+                dir.mkdir();
+            }
 
             if(!isNode) {
                 while (true) {
@@ -58,6 +56,7 @@ public class Main {
                                 > Welcome to our PeerBox! :)
                                 [1] Create a file
                                 [2] List all files
+                                [3] Fetch a file
                                 Or "exit" to leave.
                                 """);
                         System.out.flush();
@@ -81,7 +80,6 @@ public class Main {
                             File sysFile = new File(path+"\\"+filename);
                             System.out.print("> Enter the file content\n");
                             if (!sysFile.exists()){
-                                dir.mkdir();
                                 sysFile.createNewFile();
                             }
                             FileOutputStream inF = new FileOutputStream(sysFile);
@@ -113,8 +111,8 @@ public class Main {
 
                             file.setData(buf);*/
 
-                            //System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
-                        } else if (line.startsWith("2")) {
+                        }
+                        else if (line.startsWith("2")) {
                             String text = "Executed Listing!";
                             ObjectMessage message = new ObjectMessage(null, text);
                             channel.send(message);
@@ -124,6 +122,17 @@ public class Main {
                                 }
                             }*/
                         }
+                        else if (line.startsWith("3")){
+                            String text = "Executed Fetching!";
+                            ObjectMessage message = new ObjectMessage(null, text);
+                            channel.send(message);
+                            String GUID = channel.getAddressAsUUID();
+                            PeerFileID ID = new PeerFileID(GUID);
+                            PeerFile file = new PeerFile(ID);
+                            file.setChannel(channel);
+                            file.fetch(ID);
+                        }
+
                     } catch (PeerBoxException e) {
                         logger.info("The node: {} is disconnecting", hostname);
                         channel.close();
@@ -137,12 +146,9 @@ public class Main {
                         /*String text = String.format("Hello from %s!", hostname);
                         ObjectMessage message = new ObjectMessage(null, text);
                         channel.send(message);*/
-                        if (!dir.exists()){
-                            dir.mkdir();
-                        }
-                        File[] f = dir.listFiles();
 
-                        //Arrays.stream(f).forEach(System.out::println);
+                        File[] f = dir.listFiles();
+                        Arrays.stream(f).forEach(System.out::println);
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
                         logger.warn("I have disconected! {}",hostname);

@@ -1,7 +1,5 @@
 package pt.ipb.dsys.peerbox.common;
 
-import java.io.File;
-
 /**
  * The main interface that specifies the operation of the PeerBox system.
  * It contains the basic functionality.
