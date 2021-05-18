@@ -75,7 +75,7 @@ public class Main {
                             file.setChannel(channel);
 
                             File sysFile = new File(path+"\\"+filename);
-                            System.out.print("> Enter the file content\n");
+                            System.out.print("> Enter the file content [type exit to quit writing!]\n");
                             if (!sysFile.exists()){
                                 sysFile.createNewFile();
                             }
