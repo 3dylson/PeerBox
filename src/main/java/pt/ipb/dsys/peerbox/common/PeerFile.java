@@ -1,16 +1,17 @@
 package pt.ipb.dsys.peerbox.common;
 
 import com.google.common.collect.Lists;
-import org.jgroups.*;
-import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
+import org.jgroups.Address;
+import org.jgroups.JChannel;
+import org.jgroups.ObjectMessage;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
+import pt.ipb.dsys.peerbox.util.Sleeper;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.*;
-
-import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
 
@@ -19,7 +20,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
 
     private PeerFileID fileId;
     private byte[] data;
-    private Collection<Chunk> chunks = new ArrayList<Chunk>();
+    private Collection<Chunk> chunks = new ArrayList<>();
 
     //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
@@ -124,10 +125,10 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
                 int v = receivers.size();
                 System.out.println("There's "+v+" receivers!");
                 int r=0;
-                Collections.shuffle(receivers);
-                for (Address randomAddress : receivers){
+                //Collections.shuffle(receivers);
+                for (Address address : receivers){
                     while (r++<=replicas) {
-                        channel.send(new ObjectMessage(randomAddress, this.getChunks().contains(chunk)));
+                        channel.send(new ObjectMessage(address, this.getChunks().contains(chunk)));
                     }
                 }
             } catch (Exception e) {
@@ -149,23 +150,27 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFile fetch(PeerFileID id) throws Exception {
+    public PeerFile fetch(PeerFileID id) throws PeerBoxException {
 
         receiver.setState(LoggingReceiver.STATES.WAITING);
 
         PeerFile request = new PeerFile(id);
 
         try {
-            int n = request.chunks.size();
+           /* int n = request.chunks.size();
             List<Chunk> r_chunk = (List<Chunk>) request.getChunks();
             int i =0;
             for (i=0; i <= n; i++) {
                 channel.send(null, r_chunk.get(i));
-            }
+            }*/
+            channel.send(null,request);
 
         } catch (Exception e) {
             e.printStackTrace();
             receiver.setState(LoggingReceiver.STATES.READY);
+            System.out.println("Waiting for chunks...");
+            Sleeper.sleep(10000);
+            receiver.setState(LoggingReceiver.STATES.NULL);
         }
 
         return request;

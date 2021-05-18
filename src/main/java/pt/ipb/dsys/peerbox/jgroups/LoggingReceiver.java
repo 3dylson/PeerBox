@@ -4,31 +4,32 @@ import org.jgroups.*;
 import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ipb.dsys.peerbox.Main;
 import pt.ipb.dsys.peerbox.common.Chunk;
-import pt.ipb.dsys.peerbox.common.PeerBox;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LoggingReceiver implements Receiver {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
     JChannel channel;
-    final List<Address> members =new LinkedList<Address>();
+    final List<Address> members = new LinkedList<>();
     List<PeerFile> requestQueue;
-    Collection<Chunk> chunks;
+    Collection<Chunk> chunks = new ArrayList<>();
+    final Map<String, OutputStream> files = new ConcurrentHashMap<>();
 
     public enum STATES {
-        READY, WAITING, CRITICAL
+        READY, WAITING, NULL
     }
 
-    private STATES state = STATES.READY;
+    private STATES state = STATES.NULL;
     private long timestamp = 0;
 
     public List<Address> getMembers() {
@@ -41,6 +42,10 @@ public class LoggingReceiver implements Receiver {
 
     public void setState(STATES state) {
         this.state = state;
+    }
+
+    public Map<String, OutputStream> getFiles() {
+        return files;
     }
 
     /**
@@ -71,26 +76,37 @@ public class LoggingReceiver implements Receiver {
                 + " to: " + msg.getDest()
                 + " -> " + message;
         System.out.println(line);
-       if(message instanceof PeerFile) {
+       if(message instanceof PeerFileID) {
            // Increments the logical clock timestamp whenever a request is received
-           logger.info("Received {} from {}", message, msg.getSrc());
            timestamp++;
 
+           if (state == STATES.NULL){
+               OutputStream out = files.get(((PeerFileID) message).getFilename());
+               try{
+                   if (out == null) {
+                       String output_filename = new File(((PeerFileID) message).getFilename()).getName();
+                       output_filename = "\\tmp\\"+output_filename;
+                       out = new FileOutputStream(output_filename);
+                       System.out.println("-- creating file "+((PeerFileID) message).getFilename()+"\n");
+                       files.put(((PeerFileID) message).getFilename(),out);
+                   }
+               } catch (FileNotFoundException e) {
+                   e.printStackTrace();
+               }
+           }
+
            if(state == STATES.READY) {
-               sendFile((PeerFile) message);
+               sendChunk((PeerFile) message);
            }
-
-           else if (state == STATES.WAITING) {
-               requestQueue.add((PeerFile) message);
-               processPendingRequests();
-           }
-
        }
 
        else if (message instanceof Chunk) {
            chunks.add((Chunk) message);
-           logger.info("Received chunk number {}, of the file {}, from {} ", ((Chunk) message).getChunkNo(),
-                   ((Chunk) message).getFileID().getFileId().getFilename(), msg.getSrc() );
+           /*logger.info("Received chunk number {}, of the file {}, from {} ", ((Chunk) message).getChunkNo(),
+                   ((Chunk) message).getFileID().getFileId().getFilename(), msg.getSrc() );*/
+           System.out.println("Received chunk number "+((Chunk) message).getChunkNo()+" of the file "
+                   +((Chunk) message).getFileID().getFileId().getFilename());
+
        }
 
     }
@@ -129,15 +145,20 @@ public class LoggingReceiver implements Receiver {
         if (destination !=null){
             try{
                 PeerFile file = new PeerFile(new PeerFileID(channel.getAddressAsString()));
-                for (int i = 0; i <= chunks.size(); i++);
-                {
-                    if (chunks.contains(file.getChunks()));
+                ArrayList<Chunk> incomingChunks = new ArrayList<>(request.getChunks());
+                ArrayList<Chunk> localChunk = new ArrayList<>(chunks);
+
+                for (int i = 0; i < incomingChunks.size(); i++){
+                    for (int j = 0; j < localChunk.size(); j++){
+                        if (localChunk.equals(incomingChunks)){
+                            channel.send(new ObjectMessage(destination, localChunk.get(j)));
+                            System.out.println("Sending chunk "+localChunk.get(j).getChunkNo()
+                                    +" to "+destination.toStringLong());
+                        }
+                    }
                 }
-                file.setChunks(chunks);
-                channel.send(destination,file);
-                logger.info("Sent a File to {}",destination.toStringLong());
             }catch (Exception e) {
-                logger.error("File not sent!");
+                logger.error("Chunk not sent!");
             }
         }
     }

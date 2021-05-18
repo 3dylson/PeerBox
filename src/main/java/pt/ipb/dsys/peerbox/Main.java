@@ -16,6 +16,7 @@ import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,9 +26,6 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     private long timestamp = 0;
-
-    final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
-
 
 
     public static void main(String[] args) {
@@ -48,6 +46,8 @@ public class Main {
             //channel.getState(null, 10000);
 
             String hostname = DnsHelper.getHostName();
+            String path = ("\\tmp\\");
+            File dir = new File(path);
 
             if(!isNode) {
                 while (true) {
@@ -73,13 +73,11 @@ public class Main {
                             String GUID = channel.getAddressAsUUID();
                             System.out.print("> Enter the filename\n");
                             String filename = in.readLine();
-                            System.out.print("> Enter the file path\n");
-                            String path = in.readLine();
+                            System.out.print("> The file path is "+path+" \n");
                             PeerFileID ID = new PeerFileID(GUID,filename,path,timestamp);
                             PeerFile file = new PeerFile(ID);
                             file.setChannel(channel);
 
-                            File dir = new File(path);
                             File sysFile = new File(path+"\\"+filename);
                             System.out.print("> Enter the file content\n");
                             if (!sysFile.exists()){
@@ -104,9 +102,9 @@ public class Main {
                             finally {
                                 System.out.print("> Enter the number of the replicas(per chunks)\n");
                                 int replicas = in.read();
-                                files.put(file.getFileId(),file);
                                 file.save(path, replicas);
-                                logger.info("The file was saved in the path {} with {} replicas", path, replicas);
+                                channel.send(new ObjectMessage(null,file.getFileId()));
+                                logger.info("The file was saved in the path {}.", path);
                                 //file.setData(buf);
                             }
                             /*while(bu)
@@ -120,11 +118,11 @@ public class Main {
                             String text = "Executed Listing!";
                             ObjectMessage message = new ObjectMessage(null, text);
                             channel.send(message);
-                            synchronized (files){
+                           /* synchronized (files){
                                 for(Map.Entry<PeerFileID,PeerFile> entry: files.entrySet()){
                                     System.out.println(entry.getKey() + ": " + entry.getValue());
                                 }
-                            }
+                            }*/
                         }
                     } catch (PeerBoxException e) {
                         logger.info("The node: {} is disconnecting", hostname);
@@ -135,12 +133,16 @@ public class Main {
             } else {
                 while (true) {
                     try{
-                        //TODO update view!
-
                         //logger.info("I am a node! {}",hostname);
-                        String text = String.format("Hello from %s!", hostname);
+                        /*String text = String.format("Hello from %s!", hostname);
                         ObjectMessage message = new ObjectMessage(null, text);
-                        channel.send(message);
+                        channel.send(message);*/
+                        if (!dir.exists()){
+                            dir.mkdir();
+                        }
+                        File[] f = dir.listFiles();
+
+                        //Arrays.stream(f).forEach(System.out::println);
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
                         logger.warn("I have disconected! {}",hostname);
