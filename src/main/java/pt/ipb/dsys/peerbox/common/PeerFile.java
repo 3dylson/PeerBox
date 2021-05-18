@@ -1,31 +1,61 @@
 package pt.ipb.dsys.peerbox.common;
 
 import com.google.common.collect.Lists;
+import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.ObjectMessage;
+import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
+import pt.ipb.dsys.peerbox.util.Sleeper;
 
-import java.io.*;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class PeerFile implements PeerBox  {
+public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
 
+    public static final long serialVersionUID = 1L;
 
-    JChannel channel;
-    Map<String, OutputStream> files = new ConcurrentHashMap<>();
-
-    private Collection<Chunk> chunks;
 
     private PeerFileID fileId;
     private byte[] data;
+    private Collection<Chunk> chunks = new ArrayList<>();
+
+    //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
+    JChannel channel;
+    LoggingReceiver receiver = new LoggingReceiver();
 
 
-    public PeerFile(PeerFileID fileId) {
+    public PeerFile() {
+
+    }
+
+    public PeerFile(PeerFileID fileId, Collection<Chunk> chunks) {
         this.fileId = fileId;
+        this.chunks = chunks;
+    }
 
+    public PeerFile(PeerFileID fileId, byte[] data) {
+        this.fileId = fileId;
+        this.data = data;
+    }
+
+    public PeerFile(PeerFileID fileId, List<List<byte[]>> splitedData) {
+        this.fileId = fileId;
+        chunks.add((Chunk) splitedData);
+    }
+
+    public PeerFile(PeerFileID fileId, byte[] data, Collection<Chunk> chunks) {
+        this.fileId = fileId;
+        this.data = data;
+        this.chunks = chunks;
+    }
+
+    public PeerFile(PeerFileID peerFileID) {
+        fileId = peerFileID;
+        //channel.connect(CLUSTER_NAME);
+        //channel.setReceiver(receiver);
     }
 
     public PeerFileID getFileId() {
@@ -45,6 +75,21 @@ public class PeerFile implements PeerBox  {
         this.data = data;
     }
 
+    public Collection<Chunk> getChunks() {
+        return chunks;
+    }
+
+    public void setChunks(Collection<Chunk> chunks) {
+        this.chunks = chunks;
+    }
+
+    public JChannel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(JChannel channel) {
+        this.channel = channel;
+    }
 
     /**
      * Operations:
@@ -58,70 +103,38 @@ public class PeerFile implements PeerBox  {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFileID save(String path, int replicas) throws Exception {
+    public PeerFileID save(String path, int replicas) throws PeerBoxException {
 
-        //getFileId().setPath(path);
+        List<byte[]> data = Collections.singletonList(this.getData());
+        List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
 
-        String filename = this.getFileId().getFilename();
-
-        String filePath = this.getFileId().getPath();
-
-       // File file = new File(filePath);
-        FileOutputStream out = new FileOutputStream(filePath);
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-
-        /*file.setWritable(true);
-        file.setExecutable(true);
-        file.setReadable(true);*/
-
-
-
-
-        System.out.print("> Write something in your file.\n*write s to save and exit*:\n");
-        String fdata;
-        for(;;) {
-            /*byte[] buf = new byte[8096];
-            out.write(buf);
-            int bytes = out.write(buf);*/
-            fdata = in.readLine();
-            out.write(fdata.getBytes());
-            if(fdata.equals("s"))
-                break;
-            this.setData(fdata.getBytes());
+        int size = splitedData.lastIndexOf(data);
+        for (int i = 0; i <= size; i++){
+            //new Chunk(this,i, Collections.singletonList(splitedData.get(i)));
+            chunks.add(new Chunk(this,i, Collections.singletonList(splitedData.get(i))));
         }
 
-        boolean bool = false;
-        //PeerFile file = new PeerFile(path,null);
-
-        //bool = file.exists();
-
-        //if(!bool){
-
-            List<byte[]> data = Collections.singletonList(this.getData());
-            List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
-            //chunks.add((Chunk) splitedData);
-
-            int i=0;
-            while(i++<replicas) {
-                //Message msg = new Message(null, splitedData);
-                //channel.send((Message) splitedData);
-                ObjectMessage msg = new ObjectMessage(null,splitedData);
-                channel.send(msg);
+        for (Chunk chunk : chunks) {
+            try{
+                ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
+                if(receivers.isEmpty()){
+                    System.out.println("There's no receivers!");
+                    break;
+                }
+                //receivers.forEach(System.out::println);
+                int v = receivers.size();
+                System.out.println("There's "+v+" receivers!");
+                int r=0;
+                //Collections.shuffle(receivers);
+                for (Address address : receivers){
+                    while (r++<=replicas) {
+                        channel.send(new ObjectMessage(address, this.getChunks().contains(chunk)));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-        /*} else{
-            System.out.print("This file already exists!");
-        }*/
-
-        //Example:
-        /*Person p=new Person("Bela Ban", 322649, array);
-        Message msg=new ObjectMessage(dest, p);
-        channel.send(msg)
-
-        // or
-
-        msg=new ObjectMessage(null, "hello world");
-        channel.send(msg);*/
+        }
 
         return fileId;
     }
@@ -137,14 +150,31 @@ public class PeerFile implements PeerBox  {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFile fetch(PeerFileID id) throws Exception {
+    public PeerFile fetch(PeerFileID id) throws PeerBoxException {
 
-        /*Address address = id;
-        channel.getAddress();
-        PeerFile file = new PeerFile(ID);
-        channel.send(null, file);*/
+        receiver.setState(LoggingReceiver.STATES.WAITING);
 
-        return null;
+        PeerFile request = new PeerFile(id);
+
+        try {
+           /* int n = request.chunks.size();
+            List<Chunk> r_chunk = (List<Chunk>) request.getChunks();
+            int i =0;
+            for (i=0; i <= n; i++) {
+                channel.send(null, r_chunk.get(i));
+            }*/
+            channel.send(null,request);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            receiver.setState(LoggingReceiver.STATES.READY);
+            System.out.println("Waiting for chunks...");
+            Sleeper.sleep(10000);
+            receiver.setState(LoggingReceiver.STATES.NULL);
+        }
+
+        return request;
+       // return files.get(id);
     }
 
     /**
@@ -156,21 +186,44 @@ public class PeerFile implements PeerBox  {
     @Override
     public void delete(PeerFileID id) throws PeerBoxException {
 
+        /*synchronized (files){
+            files.remove(id);
+        }*/
+
     }
 
     /**
      * Shows all the files stored in peer box
      *
-     * @return
      */
     @Override
-    public File[] listFiles() {
-        //File dir = new File("dropdown");
-        return null;
+    public void listFiles() {
+
+        /*synchronized (files){
+            for(Map.Entry<PeerFileID,PeerFile> entry: files.entrySet()){
+                System.out.println(entry.getKey() + ": " + entry.getValue());
+            }
+        }*/
     }
 
     @Override
     public PeerFileID data(String path) throws PeerBoxException {
         return null;
+    }
+
+    /**
+     * Compares requests to see which one has the earliest timestamp
+     * If the timestamps can't be compared, compares the GUIDs*/
+    @Override
+    public int compareTo(PeerFileID other) {
+        if (other.getTimestamp() < this.getFileId().getTimestamp()) {
+            return -1;
+        }
+        else if (other.getTimestamp() > this.getFileId().getTimestamp()) {
+            return 1;
+        }
+        else {
+            return other.getGUID().compareTo(this.getFileId().getGUID());
+        }
     }
 }

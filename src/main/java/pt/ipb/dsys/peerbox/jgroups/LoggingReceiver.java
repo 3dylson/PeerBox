@@ -1,84 +1,189 @@
 package pt.ipb.dsys.peerbox.jgroups;
 
-import org.jgroups.Message;
-import org.jgroups.Receiver;
-import org.jgroups.View;
-import org.jgroups.util.Util;
+import org.jgroups.*;
+import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.InputStream;
+import pt.ipb.dsys.peerbox.common.Chunk;
+import pt.ipb.dsys.peerbox.common.PeerFile;
+import pt.ipb.dsys.peerbox.common.PeerFileID;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LoggingReceiver implements Receiver {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
-    /*public enum STATES {
-        READY, WAITING, CRITICAL
+    JChannel channel;
+    final List<Address> members = new LinkedList<>();
+    List<PeerFile> requestQueue;
+    Collection<Chunk> chunks = new ArrayList<>();
+    final Map<String, OutputStream> files = new ConcurrentHashMap<>();
+
+    public enum STATES {
+        READY, WAITING, NULL
     }
 
-    private STATES state = STATES.READY;
-    private long timestamp = 0;*/
+    private STATES state = STATES.NULL;
+    private long timestamp = 0;
 
-    final List<String> state = new LinkedList<String>();
+    public List<Address> getMembers() {
+        return members;
+    }
+
+    public STATES getState() {
+        return state;
+    }
+
+    public void setState(STATES state) {
+        this.state = state;
+    }
+
+    public Map<String, OutputStream> getFiles() {
+        return files;
+    }
+
+    /**
+     * Called when a change in membership has occurred. No long running actions, sending of messages
+     * or anything that could block should be done in this callback. If some long running action
+     * needs to be performed, it should be done in a separate thread.
+     * <br/>
+     * Note that on reception of the first view (a new member just joined), the channel will not yet
+     * be in the connected state. This only happens when {@link JChannel#connect(String)} returns.
+     *
+     * @param new_view
+     */
+    @Override
+    public void viewAccepted(View new_view) {
+        System.out.println("New View: " + new_view);
+        Receiver.super.viewAccepted(new_view);
+        synchronized (members) {
+            members.clear();
+            members.addAll(new_view.getMembers());
+        }
+    }
 
     @Override
     public void receive(Message msg) {
-        logger.info("Message from {} to {}: {}", msg.src(), msg.dest(), msg.getObject());
+       Object message = msg.getObject();
+       String line = "Message received from: "
+                + msg.getSrc()
+                + " to: " + msg.getDest()
+                + " -> " + message;
+        System.out.println(line);
+       if(message instanceof PeerFileID) {
+           // Increments the logical clock timestamp whenever a request is received
+           timestamp++;
 
-        /*String line = msg.getSrc() + ": " + msg.getObject();
-        logger.info(line);
-        synchronized (state){
-            state.add(line);
-        }*/
+           if (state == STATES.NULL){
+               OutputStream out = files.get(((PeerFileID) message).getFilename());
+               try{
+                   if (out == null) {
+                       String output_filename = new File(((PeerFileID) message).getFilename()).getName();
+                       output_filename = "\\tmp\\"+output_filename;
+                       out = new FileOutputStream(output_filename);
+                       System.out.println("-- creating file "+((PeerFileID) message).getFilename()+"\n");
+                       files.put(((PeerFileID) message).getFilename(),out);
+                   }
+               } catch (FileNotFoundException e) {
+                   e.printStackTrace();
+               }
+           }
+
+           if(state == STATES.READY) {
+               sendChunk((PeerFile) message);
+           }
+       }
+
+       else if (message instanceof Chunk) {
+           chunks.add((Chunk) message);
+           /*logger.info("Received chunk number {}, of the file {}, from {} ", ((Chunk) message).getChunkNo(),
+                   ((Chunk) message).getFileID().getFileId().getFilename(), msg.getSrc() );*/
+           System.out.println("Received chunk number "+((Chunk) message).getChunkNo()+" of the file "
+                   +((Chunk) message).getFileID().getFileId().getFilename());
+
+       }
 
     }
 
-    @Override
-    public void viewAccepted(View view) {
-        logger.info("New View : {}", view);
+    private void sendFile(PeerFile request) {
+        UUID destination = null;
+
+        // Gets the destination by comparing the request's GUID with every GUID in the cluster
+        for (Address address : channel.getView().getMembers()) {
+            UUID addressUUID = (UUID) address;
+            if (addressUUID.toStringLong().equals(request.getFileId().getGUID())) {
+                destination = addressUUID;
+            }
+        }
+        if (destination !=null){
+            try{
+                PeerFile file = new PeerFile(new PeerFileID(channel.getAddressAsString()));
+                channel.send(destination,file);
+                logger.info("Sent a File to {}",destination.toStringLong());
+            }catch (Exception e) {
+                logger.error("File not sent!");
+            }
+        }
     }
 
-    /**
-     * Allows an application to write the state to an OutputStream. After the state has
-     * been written, the OutputStream doesn't need to be closed as stream closing is automatically
-     * done when a calling thread returns from this callback.
-     *
-     * @param output The OutputStream
-     * @throws Exception If the streaming fails, any exceptions should be thrown so that the state requester
-     *                   can re-throw them and let the caller know what happened
-     */
-    @Override
-    public void getState(OutputStream output) throws Exception {
-        synchronized (state){
-            Util.objectToStream(state, new DataOutputStream(output));
+    private void sendChunk(PeerFile request) {
+        UUID destination = null;
+
+        // Gets the destination by comparing the request's GUID with every GUID in the cluster
+        for (Address address : channel.getView().getMembers()) {
+            UUID addressUUID = (UUID) address;
+            if (addressUUID.toStringLong().equals(request.getFileId().getGUID())) {
+                destination = addressUUID;
+            }
+        }
+        if (destination !=null){
+            try{
+                PeerFile file = new PeerFile(new PeerFileID(channel.getAddressAsString()));
+                ArrayList<Chunk> incomingChunks = new ArrayList<>(request.getChunks());
+                ArrayList<Chunk> localChunk = new ArrayList<>(chunks);
+
+                for (int i = 0; i < incomingChunks.size(); i++){
+                    for (int j = 0; j < localChunk.size(); j++){
+                        if (localChunk.equals(incomingChunks)){
+                            channel.send(new ObjectMessage(destination, localChunk.get(j)));
+                            System.out.println("Sending chunk "+localChunk.get(j).getChunkNo()
+                                    +" to "+destination.toStringLong());
+                        }
+                    }
+                }
+            }catch (Exception e) {
+                logger.error("Chunk not sent!");
+            }
         }
     }
 
     /**
-     * Allows an application to read the state from an InputStream. After the state has been
-     * read, the InputStream doesn't need to be closed as stream closing is automatically done when a
-     * calling thread returns from this callback.
-     *
-     * @param input The InputStream
-     * @throws Exception If the streaming fails, any exceptions should be thrown so that the state requester
-     *                   can catch them and thus know what happened
-     */
-    @Override
-    public void setState(InputStream input) throws Exception {
-        List<String> list;
-        list=(List<String>)Util.objectFromStream(new DataInputStream(input));
-        synchronized(state) {
-            state.clear();
-            state.addAll(list);
+     * Processes pending (delayed) requests
+     * */
+    private void processPendingRequests(){
+        List<PeerFile> requestQ;
+        do {
+            requestQ = new ArrayList<PeerFile>(requestQueue);
+            //Collections.sort(requestQ);
+            for (PeerFile request : requestQ) {
+                sendFile(request);
+            }
         }
-        logger.info(list.size() + " messages in file history):");
-        for(String str: list) {
-            logger.info(str);
-        }
+        while (!requestQ.equals(requestQueue));
+
+        requestQueue.clear();
     }
+
+    // Returns the number of connected nodes in the cluster
+    private int clusterSize() {
+        return channel.getView().getMembers().size();
+    }
+
+
 }
