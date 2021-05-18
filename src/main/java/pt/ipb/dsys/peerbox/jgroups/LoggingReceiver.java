@@ -8,14 +8,11 @@ import pt.ipb.dsys.peerbox.common.Chunk;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LoggingReceiver implements Receiver {
+public class LoggingReceiver implements Receiver, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
@@ -71,11 +68,11 @@ public class LoggingReceiver implements Receiver {
     @Override
     public void receive(Message msg) {
        Object message = msg.getObject();
-       /*String line = "Message received from: "
+       String line = "Message received from: "
                 + msg.getSrc()
                 + " to: " + msg.getDest()
                 + " -> " + message;
-        System.out.println(line);*/
+        System.out.println(line);
        if(message instanceof PeerFileID) {
            // Increments the logical clock timestamp whenever a request is received
            timestamp++;
@@ -109,9 +106,9 @@ public class LoggingReceiver implements Receiver {
        }
 
        else if(message instanceof PeerFile) {
-
            if(state == STATES.WAITING) {
                sendChunk((PeerFile) message);
+               System.out.println("-- sending chunks... ");
            }
 
        }
@@ -123,6 +120,17 @@ public class LoggingReceiver implements Receiver {
            System.out.println("Received chunk number "+((Chunk) message).getChunkNo()+" of the file "
                    +((Chunk) message).getFileID().getFileId().getFilename());
 
+       }
+
+       else if (message instanceof File) {
+           if (files.isEmpty()){
+               System.out.println("-- no files! \n");
+           }
+           synchronized (files){
+               for(Map.Entry<String,OutputStream> entry: files.entrySet()){
+                   System.out.println(entry.getKey() + ": " + entry.getValue());
+               }
+           }
        }
 
     }
@@ -150,7 +158,7 @@ public class LoggingReceiver implements Receiver {
 
     private void sendChunk(PeerFile request) {
         UUID destination = null;
-
+        System.out.println("Received a request");
         // Gets the destination by comparing the request's GUID with every GUID in the cluster
         for (Address address : channel.getView().getMembers()) {
             UUID addressUUID = (UUID) address;

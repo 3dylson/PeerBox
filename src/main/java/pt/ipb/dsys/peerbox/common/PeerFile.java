@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
+public class PeerFile implements PeerBox, Serializable {
 
     public static final long serialVersionUID = 1L;
 
@@ -28,28 +28,6 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
 
 
     public PeerFile() {
-
-    }
-
-    public PeerFile(PeerFileID fileId, Collection<Chunk> chunks) {
-        this.fileId = fileId;
-        this.chunks = chunks;
-    }
-
-    public PeerFile(PeerFileID fileId, byte[] data) {
-        this.fileId = fileId;
-        this.data = data;
-    }
-
-    public PeerFile(PeerFileID fileId, List<List<byte[]>> splitedData) {
-        this.fileId = fileId;
-        chunks.add((Chunk) splitedData);
-    }
-
-    public PeerFile(PeerFileID fileId, byte[] data, Collection<Chunk> chunks) {
-        this.fileId = fileId;
-        this.data = data;
-        this.chunks = chunks;
     }
 
     public PeerFile(PeerFileID peerFileID) {
@@ -155,15 +133,12 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
         receiver.setState(LoggingReceiver.STATES.WAITING);
 
         PeerFile request = new PeerFile(id);
+        //ArrayList<Chunk> chunkArrayList = new ArrayList<>(request.getChunks());
 
         try {
-           /* int n = request.chunks.size();
-            List<Chunk> r_chunk = (List<Chunk>) request.getChunks();
-            int i =0;
-            for (i=0; i <= n; i++) {
-                channel.send(null, r_chunk.get(i));
-            }*/
-            channel.send(null,request);
+
+            ObjectMessage message = new ObjectMessage(null, request);
+            channel.send(message);
             System.out.println("Waiting for chunks...");
             Sleeper.sleep(10000);
 
@@ -173,6 +148,7 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
         receiver.setState(LoggingReceiver.STATES.NULL);
 
         return request;
+
        // return files.get(id);
     }
 
@@ -189,7 +165,8 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
         PeerFile request = new PeerFile(id);
 
         try{
-            channel.send(null,request);
+            ObjectMessage message = new ObjectMessage(null, request);
+            channel.send(message);
             System.out.println("Sending delete msg...");
             Sleeper.sleep(10000);
         } catch (Exception e) {
@@ -199,38 +176,9 @@ public class PeerFile implements PeerBox, Comparable<PeerFileID>, Serializable {
 
     }
 
-    /**
-     * Shows all the files stored in peer box
-     *
-     */
-    @Override
-    public void listFiles() {
-
-        /*synchronized (files){
-            for(Map.Entry<PeerFileID,PeerFile> entry: files.entrySet()){
-                System.out.println(entry.getKey() + ": " + entry.getValue());
-            }
-        }*/
-    }
-
     @Override
     public PeerFileID data(String path) throws PeerBoxException {
         return null;
     }
 
-    /**
-     * Compares requests to see which one has the earliest timestamp
-     * If the timestamps can't be compared, compares the GUIDs*/
-    @Override
-    public int compareTo(PeerFileID other) {
-        if (other.getTimestamp() < this.getFileId().getTimestamp()) {
-            return -1;
-        }
-        else if (other.getTimestamp() > this.getFileId().getTimestamp()) {
-            return 1;
-        }
-        else {
-            return other.getGUID().compareTo(this.getFileId().getGUID());
-        }
-    }
 }

@@ -57,6 +57,7 @@ public class Main {
                                 [1] Create a file
                                 [2] List all files
                                 [3] Fetch a file
+                                [4] Delete a file
                                 Or "exit" to leave.
                                 """);
                         System.out.flush();
@@ -65,10 +66,6 @@ public class Main {
                         if (line.startsWith("quit") || line.startsWith("exit"))
                             break;
                         else if (line.startsWith("1")) {
-                            timestamp++;
-                            String text = "Executed Create/Save!";
-                            ObjectMessage message = new ObjectMessage(null, text);
-                            channel.send(message);
                             String GUID = channel.getAddressAsUUID();
                             System.out.print("> Enter the filename\n");
                             String filename = in.readLine();
@@ -113,24 +110,29 @@ public class Main {
 
                         }
                         else if (line.startsWith("2")) {
-                            String text = "Executed Listing!";
-                            ObjectMessage message = new ObjectMessage(null, text);
+                            //String text = "Executed Listing!";
+                            ObjectMessage message = new ObjectMessage(null, dir);
                             channel.send(message);
-                           /* synchronized (files){
-                                for(Map.Entry<PeerFileID,PeerFile> entry: files.entrySet()){
-                                    System.out.println(entry.getKey() + ": " + entry.getValue());
-                                }
-                            }*/
                         }
                         else if (line.startsWith("3")){
-                            String text = "Executed Fetching!";
-                            ObjectMessage message = new ObjectMessage(null, text);
-                            channel.send(message);
                             String GUID = channel.getAddressAsUUID();
-                            PeerFileID ID = new PeerFileID(GUID);
+                            System.out.print("> The file ID available is: "+GUID+"\n");
+                            System.out.print("> Enter the file ID to fetch)\n");
+                            String fileID = in.readLine();
+                            PeerFileID ID = new PeerFileID(fileID);
                             PeerFile file = new PeerFile(ID);
                             file.setChannel(channel);
                             file.fetch(ID);
+                        }
+                        else if (line.startsWith("4")) {
+                            String GUID = channel.getAddressAsUUID();
+                            System.out.print("> The file ID available is: "+GUID+"\n");
+                            System.out.print("> Enter the file ID to delete)\n");
+                            String fileID = in.readLine();
+                            PeerFileID ID = new PeerFileID(fileID);
+                            PeerFile file = new PeerFile(ID);
+                            file.setChannel(channel);
+                            file.delete(ID);
                         }
 
                     } catch (PeerBoxException e) {
@@ -151,7 +153,7 @@ public class Main {
                         Arrays.stream(f).forEach(System.out::println);
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
-                        logger.warn("I have disconected! {}",hostname);
+                        logger.warn("I have disconnected! {}",hostname);
                     }
                 }
             }

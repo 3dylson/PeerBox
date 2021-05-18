@@ -43,12 +43,6 @@ public interface PeerBox {
     void delete(PeerFileID id) throws PeerBoxException;
 
 
-    /**
-     * Shows all the files stored in peer box
-     * @throws PeerBoxException in case the list is empty
-     * @return*/
-    void listFiles() throws PeerBoxException;
-
 
      PeerFileID data(String path) throws PeerBoxException;
 
