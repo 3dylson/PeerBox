@@ -94,6 +94,7 @@ public class PeerFile implements PeerBox, Serializable {
 
         for (Chunk chunk : chunks) {
             try{
+
                 ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
                 if(receivers.isEmpty()){
                     System.out.println("There's no receivers!");

@@ -24,7 +24,8 @@ public class Main {
 
 
     public static void main(String[] args) {
-        PeerUtil.localhostFix();
+        String gossipHostname = "gossip-router";
+        PeerUtil.localhostFix(gossipHostname);
         boolean isNode = args.length > 0 && args[0].equals("node");
         new Main().initializeCluster(isNode);
 
@@ -35,10 +36,13 @@ public class Main {
         // Cluster initialization and connection
         try (JChannel channel = new JChannel(DefaultProtocols.gossipRouter())) {
 
-            channel.connect(CLUSTER_NAME);
-            channel.setReceiver(new LoggingReceiver());
+            LoggingReceiver receiver = new LoggingReceiver();
+            channel.setReceiver(receiver);
             channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
+            channel.connect(CLUSTER_NAME);
             //channel.getState(null, 10000);
+
+
 
             String hostname = DnsHelper.getHostName();
             String path = ("\\tmp\\");
