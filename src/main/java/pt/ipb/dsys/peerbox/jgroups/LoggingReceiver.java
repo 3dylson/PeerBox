@@ -16,18 +16,23 @@ public class LoggingReceiver implements Receiver, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
-    JChannel channel;
+    private final JChannel channel;
+    private View new_view;
+    private long timestamp = 0;
     final List<Address> members = new LinkedList<>();
     List<PeerFile> requestQueue;
     Collection<Chunk> chunks = new ArrayList<>();
     final Map<String, OutputStream> files = new ConcurrentHashMap<>();
+
+    public LoggingReceiver(JChannel channel) {
+        this.channel = channel;
+    }
 
     public enum STATES {
         READY, WAITING, NULL, DELETE
     }
 
     private STATES state = STATES.NULL;
-    private long timestamp = 0;
 
     public List<Address> getMembers() {
         return members;
@@ -57,8 +62,7 @@ public class LoggingReceiver implements Receiver, Serializable {
      */
     @Override
     public void viewAccepted(View new_view) {
-        System.out.println("New View: " + new_view);
-        Receiver.super.viewAccepted(new_view);
+        logger.info("# New View: {} ",new_view);
         synchronized (members) {
             members.clear();
             members.addAll(new_view.getMembers());

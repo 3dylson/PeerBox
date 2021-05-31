@@ -24,7 +24,7 @@ public class PeerFile implements PeerBox, Serializable {
 
     //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
-    LoggingReceiver receiver = new LoggingReceiver();
+    LoggingReceiver receiver = new LoggingReceiver(channel);
 
 
     public PeerFile() {

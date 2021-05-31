@@ -20,11 +20,12 @@ public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
+    public static final String gossipHostname = "gossip-router";
     private long timestamp = 0;
 
 
     public static void main(String[] args) {
-        String gossipHostname = "gossip-router";
+
         PeerUtil.localhostFix(gossipHostname);
         boolean isNode = args.length > 0 && args[0].equals("node");
         new Main().initializeCluster(isNode);
@@ -34,13 +35,16 @@ public class Main {
     private void initializeCluster(boolean isNode) {
 
         // Cluster initialization and connection
-        try (JChannel channel = new JChannel(DefaultProtocols.gossipRouter())) {
 
-            LoggingReceiver receiver = new LoggingReceiver();
+        try (JChannel channel = new JChannel(DefaultProtocols.gossipRouter(gossipHostname,12001))) {
+
+            LoggingReceiver receiver = new LoggingReceiver(channel);
             channel.setReceiver(receiver);
             channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
             channel.connect(CLUSTER_NAME);
-            //channel.getState(null, 10000);
+            // optional: let cluster stabilize to reduce ambiguity, although it works all the same
+            Sleeper.sleep(5000);
+
 
 
 
