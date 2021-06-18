@@ -4,50 +4,69 @@ import org.jgroups.*;
 import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ipb.dsys.peerbox.common.Chunk;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LoggingReceiver implements Receiver, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
-    private final JChannel channel;
+    private JChannel channel;
     private View new_view;
-    private long timestamp = 0;
-    final List<Address> members = new LinkedList<>();
-    List<PeerFile> requestQueue;
-    Collection<Chunk> chunks = new ArrayList<>();
-    final Map<String, OutputStream> files = new ConcurrentHashMap<>();
+
+    List<Address> members = new LinkedList<>();
+    Map<String, List<UUID>> files = new ConcurrentHashMap<>();
+    Map<UUID, byte[]> chunks = new ConcurrentHashMap<>();
 
     public LoggingReceiver(JChannel channel) {
         this.channel = channel;
     }
 
-    public enum STATES {
-        READY, WAITING, NULL, DELETE
+    public JChannel getChannel() {
+        return channel;
     }
 
-    private STATES state = STATES.NULL;
+    public void setChannel(JChannel channel) {
+        this.channel = channel;
+    }
+
+    public View getNew_view() {
+        return new_view;
+    }
+
+    public void setNew_view(View new_view) {
+        this.new_view = new_view;
+    }
 
     public List<Address> getMembers() {
         return members;
     }
 
-    public STATES getState() {
-        return state;
+    public void setMembers(List<Address> members) {
+        this.members = members;
     }
 
-    public void setState(STATES state) {
-        this.state = state;
-    }
-
-    public Map<String, OutputStream> getFiles() {
+    public Map<String, List<UUID>> getFiles() {
         return files;
+    }
+
+    public void setFiles(Map<String, List<UUID>> files) {
+        this.files = files;
+    }
+
+    public Map<UUID, byte[]> getChunks() {
+        return chunks;
+    }
+
+    public void setChunks(Map<UUID, byte[]> chunks) {
+        this.chunks = chunks;
     }
 
     /**

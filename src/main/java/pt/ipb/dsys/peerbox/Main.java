@@ -46,8 +46,6 @@ public class Main {
             Sleeper.sleep(5000);
 
 
-
-
             String hostname = DnsHelper.getHostName();
             String path = ("\\tmp\\");
             File dir = new File(path);

@@ -20,20 +20,15 @@ public class PeerFile implements PeerBox, Serializable {
 
     private PeerFileID fileId;
     private byte[] data;
-    private Collection<Chunk> chunks = new ArrayList<>();
 
-    //private final Map<PeerFileID, PeerFile> files = new ConcurrentHashMap<>();
     JChannel channel;
-    LoggingReceiver receiver = new LoggingReceiver(channel);
+    LoggingReceiver receiver;
 
-
-    public PeerFile() {
-    }
-
-    public PeerFile(PeerFileID peerFileID) {
-        fileId = peerFileID;
-        //channel.connect(CLUSTER_NAME);
-        //channel.setReceiver(receiver);
+    public PeerFile(PeerFileID fileId, byte[] data, JChannel channel, LoggingReceiver receiver) {
+        this.fileId = fileId;
+        this.data = data;
+        this.channel = channel;
+        this.receiver = receiver;
     }
 
     public PeerFileID getFileId() {
@@ -44,7 +39,6 @@ public class PeerFile implements PeerBox, Serializable {
         this.fileId = fileId;
     }
 
-
     public byte[] getData() {
         return data;
     }
@@ -53,20 +47,20 @@ public class PeerFile implements PeerBox, Serializable {
         this.data = data;
     }
 
-    public Collection<Chunk> getChunks() {
-        return chunks;
-    }
-
-    public void setChunks(Collection<Chunk> chunks) {
-        this.chunks = chunks;
-    }
-
     public JChannel getChannel() {
         return channel;
     }
 
     public void setChannel(JChannel channel) {
         this.channel = channel;
+    }
+
+    public LoggingReceiver getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(LoggingReceiver receiver) {
+        this.receiver = receiver;
     }
 
     /**

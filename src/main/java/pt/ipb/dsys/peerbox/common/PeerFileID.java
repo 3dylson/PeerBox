@@ -1,5 +1,7 @@
 package pt.ipb.dsys.peerbox.common;
 
+import org.jgroups.util.UUID;
+
 import java.io.Serializable;
 
 public class PeerFileID implements Serializable {
@@ -8,55 +10,28 @@ public class PeerFileID implements Serializable {
 
     public static final long serialVersionUID = 1L;
 
-    String GUID;
-    String filename;
-    String path;
-    long timestamp;
+    UUID id;
+    int chunkNumber;
 
-    public PeerFileID() {
-
+    public PeerFileID(UUID id, int chunkNumber) {
+        this.id = id;
+        this.chunkNumber = chunkNumber;
     }
 
-    public PeerFileID(String GUID) {
-        this.GUID = GUID;
+    public UUID getId() {
+        return id;
     }
 
-    public PeerFileID(String GUID, String filename, String path, long timestamp) {
-        this.GUID = GUID;
-        this.filename = filename;
-        this.path = path;
-        this.timestamp = timestamp;
+    public void setId(UUID id) {
+        this.id = id;
     }
 
-    public String getGUID() {
-        return GUID;
+    public int getChunkNumber() {
+        return chunkNumber;
     }
 
-    public void setGUID(String GUID) {
-        this.GUID = GUID;
+    public void setChunkNumber(int chunkNumber) {
+        this.chunkNumber = chunkNumber;
     }
 
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
 }
