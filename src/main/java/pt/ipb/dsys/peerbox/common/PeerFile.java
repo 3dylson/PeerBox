@@ -3,15 +3,14 @@ package pt.ipb.dsys.peerbox.common;
 import com.google.common.collect.Lists;
 import org.jgroups.Address;
 import org.jgroups.JChannel;
+import org.jgroups.Message;
 import org.jgroups.ObjectMessage;
+import org.jgroups.util.UUID;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class PeerFile implements PeerBox, Serializable {
 
@@ -20,6 +19,7 @@ public class PeerFile implements PeerBox, Serializable {
 
     private PeerFileID fileId;
     private byte[] data;
+    private int totalChunks = 0;
 
     JChannel channel;
     LoggingReceiver receiver;
@@ -77,37 +77,45 @@ public class PeerFile implements PeerBox, Serializable {
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException {
 
+        Random random = new Random();
+
         List<byte[]> data = Collections.singletonList(this.getData());
-        List<List<byte[]>> splitedData = Lists.partition(data, BLOCK_SIZE);
+        List<List<byte[]>> chunks = Lists.partition(data,BLOCK_SIZE);
 
-        int size = splitedData.lastIndexOf(data);
-        for (int i = 0; i <= size; i++){
-            //new Chunk(this,i, Collections.singletonList(splitedData.get(i)));
-            chunks.add(new Chunk(this,i, Collections.singletonList(splitedData.get(i))));
+
+        ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
+        List<UUID> chunksList = new ArrayList<>();
+        if(receivers.isEmpty()){
+            System.out.println("There's no receivers!");
         }
 
-        for (Chunk chunk : chunks) {
-            try{
+        chunks.iterator().forEachRemaining(chunk ->
+        {
+            UUID chunkId = UUID.randomUUID();
+            chunksList.add(chunkId);
+            totalChunks++;
 
-                ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
-                if(receivers.isEmpty()){
-                    System.out.println("There's no receivers!");
-                    break;
+            for (int i = 0; i < replicas; i++) {
+
+                try {
+
+                    int receive = random.nextInt(receivers.size());
+                    Address destination = channel.getView().getMembers().get(receive);
+
+                    PeerFileID fileID = new PeerFileID(chunkId,chunk,i);
+                    channel.send(new ObjectMessage(destination,fileID));
+                    //setFileId(fileID);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                //receivers.forEach(System.out::println);
-                int v = receivers.size();
-                System.out.println("There's "+v+" receivers!");
-                int r=0;
-                //Collections.shuffle(receivers);
-                for (Address address : receivers){
-                    while (r++<=replicas) {
-                        channel.send(new ObjectMessage(address, this.chunks.contains(chunk)));
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
+
+        });
+
+        //setFileId(file);
+
+        receiver.getFiles().put(path,chunksList);
 
         return fileId;
     }
@@ -125,26 +133,7 @@ public class PeerFile implements PeerBox, Serializable {
     @Override
     public PeerFile fetch(PeerFileID id) throws PeerBoxException {
 
-        receiver.setState(LoggingReceiver.STATES.WAITING);
-
-        PeerFile request = new PeerFile(id);
-        //ArrayList<Chunk> chunkArrayList = new ArrayList<>(request.getChunks());
-
-        try {
-
-            ObjectMessage message = new ObjectMessage(null, request);
-            channel.send(message);
-            System.out.println("Waiting for chunks...");
-            Sleeper.sleep(10000);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        receiver.setState(LoggingReceiver.STATES.NULL);
-
-        return request;
-
-       // return files.get(id);
+        return null;
     }
 
     /**
@@ -156,24 +145,10 @@ public class PeerFile implements PeerBox, Serializable {
     @Override
     public void delete(PeerFileID id) throws PeerBoxException {
 
-        receiver.setState(LoggingReceiver.STATES.DELETE);
-        PeerFile request = new PeerFile(id);
 
-        try{
-            ObjectMessage message = new ObjectMessage(null, request);
-            channel.send(message);
-            System.out.println("Sending delete msg...");
-            Sleeper.sleep(10000);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        receiver.setState(LoggingReceiver.STATES.NULL);
 
     }
 
-    @Override
-    public PeerFileID data(String path) throws PeerBoxException {
-        return null;
-    }
+
 
 }

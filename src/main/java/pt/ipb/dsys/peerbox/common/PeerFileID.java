@@ -3,6 +3,7 @@ package pt.ipb.dsys.peerbox.common;
 import org.jgroups.util.UUID;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class PeerFileID implements Serializable {
 
@@ -11,12 +12,15 @@ public class PeerFileID implements Serializable {
     public static final long serialVersionUID = 1L;
 
     UUID id;
+    List<byte[]> chunk;
     int chunkNumber;
 
-    public PeerFileID(UUID id, int chunkNumber) {
+    public PeerFileID(UUID id, List<byte[]> chunk, int chunkNumber) {
         this.id = id;
+        this.chunk = chunk;
         this.chunkNumber = chunkNumber;
     }
+
 
     public UUID getId() {
         return id;
