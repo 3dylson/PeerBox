@@ -21,6 +21,7 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     public static final String gossipHostname = "gossip-router";
+    public static final String peerBox = ("peerBox\\");
 
 
     public static void main(String[] args) {
@@ -49,7 +50,6 @@ public class Main {
 
             String hostname = DnsHelper.getHostName();
 
-            String peerBox = ("peerBox\\");
             File dir = new File(peerBox);
             if (!dir.exists()){
                 dir.mkdir();
@@ -88,14 +88,14 @@ public class Main {
                             newFile.createNewFile();*/
                             Sleeper.sleep(100);
                             System.out.print("> Enter the file content [bytes]\n");
-                            FileInputStream inFile = new FileInputStream(peerBox+filename);
+                            //FileInputStream inFile = new FileInputStream(peerBox+filename);
                             /*int bytes;
                             do {
                                 byte[] buf=new byte[8096];
                                 bytes=inFile.read(buf);
                             } while (bytes != -1);*/
 
-                            try {
+                            /*try {
                                 for (;;) {
                                     byte[] buf=new byte[8096];
                                     int bytes=inFile.read(buf);
@@ -106,14 +106,15 @@ public class Main {
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
-                            }finally {
+                            }finally {*/
 
 
+                                new File(peerBox+filename).createNewFile();
                                 String output_filename= new File(peerFile.save(filename,replicas).getFileName()).getName();
                                 output_filename = peerBox + output_filename;
                                 OutputStream out = new FileOutputStream(output_filename);
                                 files.put(filename,out);
-                            }
+                            //}
 
                         }
                         else if (line.startsWith("2")) {
