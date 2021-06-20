@@ -25,6 +25,8 @@ public class LoggingReceiver implements Receiver, Serializable {
     Map<String, List<UUID>> files = new ConcurrentHashMap<>();
     Map<UUID, List<byte[]>> chunks = new ConcurrentHashMap<>();
 
+    List<List<byte[]>> fetchByteList = new ArrayList<>();
+
     public enum STATES {
         DEFAULT, SAVE, FETCH, DELETE
     }
@@ -122,6 +124,23 @@ public class LoggingReceiver implements Receiver, Serializable {
                if (!chunkBytes.isEmpty()) {
                    logger.info("-- sending chunks of the file: {} ... ", ((PeerFileID) message).getFileName());
                    ((PeerFileID) message).setChunk(chunkBytes);
+
+                   List<UUID> fileChunks = getFiles().get(((PeerFileID) message).getFileName());
+                   fetchByteList.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
+
+                   if (((PeerFileID) message).getChunkNumber() == fileChunks.size() - 1) {
+
+                       try {
+                           PeerFile file = new PeerFile(null,null);
+                           file.setFileId((PeerFileID) message);
+                           channel.send(new ObjectMessage(msg.src(),file));
+                       } catch (Exception e) {
+                           e.printStackTrace();
+                       }
+
+                   }
+
+
                }
            }
 
@@ -130,9 +149,13 @@ public class LoggingReceiver implements Receiver, Serializable {
                chunks.remove(((PeerFileID) message).getId());
            }
        }
-       /*else if(message instanceof PeerFile) {
 
-       }*/
+       else if(message instanceof PeerFile) {
+
+           logger.info("Fetched file infos: ");
+           String info = ((PeerFile) message).getFileId().getChunk().toString();
+           logger.info("{}",info);
+       }
 
     }
 

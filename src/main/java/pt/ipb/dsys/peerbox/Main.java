@@ -1,7 +1,6 @@
 package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
-import org.jgroups.ObjectMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
@@ -14,6 +13,8 @@ import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
 
@@ -21,7 +22,6 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     public static final String gossipHostname = "gossip-router";
-    private long timestamp = 0;
 
 
     public static void main(String[] args) {
@@ -45,13 +45,17 @@ public class Main {
             // optional: let cluster stabilize to reduce ambiguity, although it works all the same
             Sleeper.sleep(5000);
 
+            PeerFile peerFile = new PeerFile(channel,receiver);
+            Map<String,OutputStream> files = new ConcurrentHashMap<>();
 
             String hostname = DnsHelper.getHostName();
-            String path = ("\\tmp\\");
-            File dir = new File(path);
+
+            String peerBox = ("peerBox");
+            File dir = new File(peerBox);
             if (!dir.exists()){
                 dir.mkdir();
             }
+
 
             if(!isNode) {
                 while (true) {
@@ -73,66 +77,40 @@ public class Main {
                             break;
                         else if (line.startsWith("1")) {
 
-
-                            File sysFile = new File(path+"\\"+filename);
-                            System.out.print("> Enter the file content [type exit to quit writing!]\n");
-                            if (!sysFile.exists()){
-                                sysFile.createNewFile();
+                            System.out.print("> Enter the filename\n");
+                            String filename = in.readLine();
+                            FileInputStream inFile = new FileInputStream(filename);
+                            System.out.print("> Enter the file content [bytes]\n");
+                            for (;;) {
+                                byte[] buf=new byte[8096];
+                                int bytes=inFile.read(buf);
+                                    if(bytes == -1){
+                                        peerFile.setData(buf);
+                                        break;
+                                    }
                             }
-                            FileOutputStream inF = new FileOutputStream(sysFile);
-                            try{
-                                String content;
-                                do {
-                                    content = in.readLine();
-                                    inF.write(content.getBytes());
-                                } while (!content.endsWith("exit"));
-                                inF.close();
-                                FileInputStream out = new FileInputStream(sysFile);
-                                byte[] fileContent = out.readAllBytes();
-                                file.setData(fileContent);
+                            System.out.print("> Enter the number of the replicas(per chunks)\n");
+                            int replicas = in.read();
 
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            finally {
-                                System.out.print("> Enter the number of the replicas(per chunks)\n");
-                                int replicas = in.read();
-                                file.save(path, replicas);
-                                channel.send(new ObjectMessage(null,file.getFileId()));
-                                logger.info("The file was saved in the path {}.", path);
-                                //file.setData(buf);
-                            }
-                            /*while(bu)
-                            byte[] buf = new byte[8096];
-                            int bytes = inF.read(buf);
-
-                            file.setData(buf);*/
+                            String output_filename= new File(peerFile.save(filename,replicas).getFileName()).getName();
+                            output_filename = "peerBox/" + output_filename;
+                            OutputStream out = new FileOutputStream(output_filename);
+                            files.put(filename,out);
 
                         }
                         else if (line.startsWith("2")) {
-                            //String text = "Executed Listing!";
-                            ObjectMessage message = new ObjectMessage(null, dir);
-                            channel.send(message);
+                            receiver.listFiles();
+
                         }
                         else if (line.startsWith("3")){
-                            String GUID = channel.getAddressAsUUID();
-                            System.out.print("> The file ID available is: "+GUID+"\n");
-                            System.out.print("> Enter the file ID to fetch)\n");
-                            String fileID = in.readLine();
-                            PeerFileID ID = new PeerFileID(fileID);
-                            PeerFile file = new PeerFile(ID);
-                            file.setChannel(channel);
-                            file.fetch(ID);
+                            System.out.print("> Enter the filename to fetch\n");
+                            String filename = in.readLine();
+                            PeerFileID id = new PeerFileID(null,filename,null,0);
+                            peerFile.fetch(id);
+
                         }
                         else if (line.startsWith("4")) {
-                            String GUID = channel.getAddressAsUUID();
-                            System.out.print("> The file ID available is: "+GUID+"\n");
-                            System.out.print("> Enter the file ID to delete)\n");
-                            String fileID = in.readLine();
-                            PeerFileID ID = new PeerFileID(fileID);
-                            PeerFile file = new PeerFile(ID);
-                            file.setChannel(channel);
-                            file.delete(ID);
+
                         }
 
                     } catch (PeerBoxException e) {
@@ -144,10 +122,6 @@ public class Main {
             } else {
                 while (true) {
                     try{
-                        //logger.info("I am a node! {}",hostname);
-                        /*String text = String.format("Hello from %s!", hostname);
-                        ObjectMessage message = new ObjectMessage(null, text);
-                        channel.send(message);*/
 
                         File[] f = dir.listFiles();
                         Arrays.stream(f).forEach(System.out::println);

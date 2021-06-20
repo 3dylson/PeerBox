@@ -74,6 +74,14 @@ public class PeerFile implements PeerBox, Serializable {
         this.receiver = receiver;
     }
 
+    public int getTotalChunks() {
+        return totalChunks;
+    }
+
+    public void setTotalChunks(int counter) {
+        totalChunks+=counter;
+    }
+
     /**
      * Operations:
      * - Splits `data` in BLOCK_SIZE chunks
@@ -104,8 +112,6 @@ public class PeerFile implements PeerBox, Serializable {
         {
             UUID chunkId = UUID.randomUUID();
             chunksList.add(chunkId);
-            this.totalChunks++;
-
             try {
 
                 receiver.setState(LoggingReceiver.STATES.SAVE);
@@ -123,6 +129,8 @@ public class PeerFile implements PeerBox, Serializable {
                 e.printStackTrace();
             }
         });
+
+        setTotalChunks(chunksList.size());
 
         Sleeper.sleep(5000);
         receiver.setState(LoggingReceiver.STATES.DEFAULT);
