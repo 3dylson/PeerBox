@@ -12,7 +12,6 @@ import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -105,12 +104,20 @@ public class Main {
                         else if (line.startsWith("3")){
                             System.out.print("> Enter the filename to fetch\n");
                             String filename = in.readLine();
-                            PeerFileID id = new PeerFileID(null,filename,null,0);
-                            peerFile.fetch(id);
+                            OutputStream out = files.get(filename);
+                            if(out == null){
+                                logger.info("File not found! Requesting chunks to other peers ...");
+                                PeerFileID id = new PeerFileID(null,filename,null,0);
+                                peerFile.fetch(id);
+                            }
 
                         }
                         else if (line.startsWith("4")) {
-
+                            System.out.print("> Enter the filename to delete\n");
+                            String filename = in.readLine();
+                            files.remove(filename);
+                            PeerFileID id = new PeerFileID(null,filename,null,0);
+                            peerFile.delete(id);
                         }
 
                     } catch (PeerBoxException e) {
@@ -122,9 +129,8 @@ public class Main {
             } else {
                 while (true) {
                     try{
-
-                        File[] f = dir.listFiles();
-                        Arrays.stream(f).forEach(System.out::println);
+                        logger.info("-- listing {} files: ",hostname);
+                        receiver.listFiles();
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
                         logger.warn("I have disconnected! {}",hostname);
