@@ -40,6 +40,14 @@ public class PeerFileID implements Serializable {
         this.fileName = fileName;
     }
 
+    public List<byte[]> getChunk() {
+        return chunk;
+    }
+
+    public void setChunk(List<byte[]> chunk) {
+        this.chunk = chunk;
+    }
+
     public int getChunkNumber() {
         return chunkNumber;
     }

@@ -72,13 +72,7 @@ public class Main {
                         if (line.startsWith("quit") || line.startsWith("exit"))
                             break;
                         else if (line.startsWith("1")) {
-                            String GUID = channel.getAddressAsUUID();
-                            System.out.print("> Enter the filename\n");
-                            String filename = in.readLine();
-                            System.out.print("> The file path is "+path+" \n");
-                            PeerFileID ID = new PeerFileID(GUID,filename,path,timestamp);
-                            PeerFile file = new PeerFile(ID);
-                            file.setChannel(channel);
+
 
                             File sysFile = new File(path+"\\"+filename);
                             System.out.print("> Enter the file content [type exit to quit writing!]\n");

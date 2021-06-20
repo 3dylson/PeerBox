@@ -3,7 +3,6 @@ package pt.ipb.dsys.peerbox.common;
 import com.google.common.collect.Lists;
 import org.jgroups.Address;
 import org.jgroups.JChannel;
-import org.jgroups.Message;
 import org.jgroups.ObjectMessage;
 import org.jgroups.util.UUID;
 import org.slf4j.Logger;
@@ -12,7 +11,12 @@ import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
 
 public class PeerFile implements PeerBox, Serializable {
 
@@ -27,9 +31,14 @@ public class PeerFile implements PeerBox, Serializable {
     JChannel channel;
     LoggingReceiver receiver;
 
-    public PeerFile(JChannel channel, LoggingReceiver receiver) {
+    public PeerFile(JChannel channel, LoggingReceiver receiver) throws Exception {
         this.channel = channel;
         this.receiver = receiver;
+
+        this.receiver.setChannel(channel);
+        this.channel.setReceiver(this.receiver);
+        this.channel.connect(CLUSTER_NAME);
+
     }
 
 
@@ -95,9 +104,11 @@ public class PeerFile implements PeerBox, Serializable {
         {
             UUID chunkId = UUID.randomUUID();
             chunksList.add(chunkId);
-            totalChunks++;
+            this.totalChunks++;
 
             try {
+
+                receiver.setState(LoggingReceiver.STATES.SAVE);
 
                 for (int i = 0; i < replicas; i++) {
 
@@ -107,22 +118,24 @@ public class PeerFile implements PeerBox, Serializable {
                     PeerFileID fileID = new PeerFileID(chunkId,path ,chunk,i);
                     channel.send(new ObjectMessage(destination,fileID));
                     //setFileId(fileID);
-
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
         });
+
+        Sleeper.sleep(5000);
+        receiver.setState(LoggingReceiver.STATES.DEFAULT);
 
         //setFileId(file);
         PeerFileID filePathId = new PeerFileID(null,path,null,0);
         setFileId(filePathId);
 
-        receiver.getFiles().put(path,chunksList);
+        synchronized (receiver.getFiles()){
 
+            receiver.getFiles().put(path,chunksList);
+            logger.info("File: {}, saved with {} replicas.",path,replicas);
+        }
         return filePathId;
     }
 
@@ -142,10 +155,13 @@ public class PeerFile implements PeerBox, Serializable {
         String path = id.fileName;
         List<UUID> fileChunks = receiver.getFiles().get(path);
 
+        receiver.setState(LoggingReceiver.STATES.FETCH);
         syncChunks(path, fileChunks);
 
 
         Sleeper.sleep(5000);
+        receiver.setState(LoggingReceiver.STATES.DEFAULT);
+
         return (PeerFile) receiver.getFiles().get(path);
     }
 
@@ -161,8 +177,11 @@ public class PeerFile implements PeerBox, Serializable {
         String path = id.fileName;
         List<UUID> fileChunks = receiver.getFiles().remove(path);
 
+        receiver.setState(LoggingReceiver.STATES.DELETE);
         syncChunks(path, fileChunks);
 
+        Sleeper.sleep(5000);
+        receiver.setState(LoggingReceiver.STATES.DEFAULT);
     }
 
     private void syncChunks(String path, List<UUID> fileChunks) {
