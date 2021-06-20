@@ -49,7 +49,7 @@ public class Main {
 
             String hostname = DnsHelper.getHostName();
 
-            String peerBox = ("peerBox");
+            String peerBox = ("peerBox\\");
             File dir = new File(peerBox);
             if (!dir.exists()){
                 dir.mkdir();
@@ -78,28 +78,46 @@ public class Main {
 
                             System.out.print("> Enter the filename\n");
                             String filename = in.readLine();
-                            FileInputStream inFile = new FileInputStream(filename);
-                            System.out.print("> Enter the file content [bytes]\n");
-                            for (;;) {
-                                byte[] buf=new byte[8096];
-                                int bytes=inFile.read(buf);
-                                    if(bytes == -1){
-                                        peerFile.setData(buf);
-                                        break;
-                                    }
-                            }
                             System.out.print("> Enter the number of the replicas(per chunks)\n");
                             int replicas = in.read();
+                            /*File newFile = new File(peerBox+filename);
+                            if (newFile.exists()){
+                                logger.warn("The file: {}, already exists.",filename);
+                                break;
+                            }
+                            newFile.createNewFile();*/
+                            Sleeper.sleep(100);
+                            System.out.print("> Enter the file content [bytes]\n");
+                            FileInputStream inFile = new FileInputStream(peerBox+filename);
+                            /*int bytes;
+                            do {
+                                byte[] buf=new byte[8096];
+                                bytes=inFile.read(buf);
+                            } while (bytes != -1);*/
 
-                            String output_filename= new File(peerFile.save(filename,replicas).getFileName()).getName();
-                            output_filename = "peerBox/" + output_filename;
-                            OutputStream out = new FileOutputStream(output_filename);
-                            files.put(filename,out);
+                            try {
+                                for (;;) {
+                                    byte[] buf=new byte[8096];
+                                    int bytes=inFile.read(buf);
+                                        if(bytes == -1){
+                                            peerFile.setData(buf);
+                                            break;
+                                        }
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }finally {
+
+
+                                String output_filename= new File(peerFile.save(filename,replicas).getFileName()).getName();
+                                output_filename = peerBox + output_filename;
+                                OutputStream out = new FileOutputStream(output_filename);
+                                files.put(filename,out);
+                            }
 
                         }
                         else if (line.startsWith("2")) {
                             receiver.listFiles();
-
                         }
                         else if (line.startsWith("3")){
                             System.out.print("> Enter the filename to fetch\n");

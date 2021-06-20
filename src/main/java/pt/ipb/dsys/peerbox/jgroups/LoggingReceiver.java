@@ -160,7 +160,13 @@ public class LoggingReceiver implements Receiver, Serializable {
     }
 
     public void listFiles() {
-        files.forEach((key, value) -> logger.info("{} : {}",key, value));
+        if (!files.isEmpty()) {
+
+            files.forEach((key, value) -> logger.info("{} : {}",key, value));
+        }
+        else {
+            logger.warn("No files to list.");
+        }
     }
 
 

@@ -12,7 +12,7 @@ public class DirectoryWatcher {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         WatchService watchService = FileSystems.getDefault().newWatchService();
-        Path path = Paths.get(System.getProperty("user.dir.peerBox"));
+        Path path = Paths.get(System.getProperty("peerBox"));
         path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
         WatchKey key;
         while ((key = watchService.take()) != null) {

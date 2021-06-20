@@ -45,16 +45,16 @@ public class DefaultProtocols {
         protocols.add(new NAKACK2());
         protocols.add(new GMS());
 
-//        protocols.add(new MERGE3());
-//        protocols.add(new FD_SOCK());
-//        protocols.add(new FD_ALL3());
-//        protocols.add(new VERIFY_SUSPECT());
-//        protocols.add(new UNICAST3());
-//        protocols.add(new STABLE());
-//        protocols.add(new MFC());
-//        protocols.add(new FRAG2());
-//        protocols.add(new BARRIER());
-//        protocols.add(new STATE_TRANSFER());
+        protocols.add(new MERGE3());
+        protocols.add(new FD_SOCK());
+        protocols.add(new FD_ALL3());
+        protocols.add(new VERIFY_SUSPECT());
+        protocols.add(new UNICAST3());
+        protocols.add(new STABLE());
+        protocols.add(new MFC());
+        protocols.add(new FRAG2());
+        protocols.add(new BARRIER());
+        protocols.add(new STATE_TRANSFER());
 
         return protocols;
     }
