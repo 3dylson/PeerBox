@@ -1,17 +1,27 @@
 package pt.ipb.dsys.peerbox.util;
 
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
+import pt.ipb.dsys.peerbox.common.PeerFile;
+import pt.ipb.dsys.peerbox.common.PeerFileID;
+
+import java.io.File;
+import java.nio.file.*;
 
 import static pt.ipb.dsys.peerbox.Main.peerBox;
 
-public class WatchFolder implements Runnable {
+public class WatchFolder {
 
-    public void run() {
+    PeerFile pf;
+
+    public WatchFolder(PeerFile pf) {
+        this.pf = pf;
+    }
+
+    public void main(String[] args) {
+
+        watchFolder();
+    }
+
+    public void watchFolder() {
 
         try {
 
@@ -30,23 +40,30 @@ public class WatchFolder implements Runnable {
             while (true) {
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
 
-                    // STEP5: Get file name from even context
+                    // Get file name from even context
                     WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
 
                     Path fileName = pathEvent.context();
 
-                    // STEP6: Check type of event.
+                    // Check type of event.
                     WatchEvent.Kind<?> kind = event.kind();
 
-                    // STEP7: Perform necessary action with the event
+                    // Perform necessary action with the event
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
 
                         System.out.println("A new file is created : " + fileName);
+                        //File newFile = new File(peerBox+fileName);
+                        /*if (newFile.exists()) {
+
+                        }*/
+                        //pf.save(fileName.toString(),2);
                     }
 
                     if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
 
                         System.out.println("A file has been deleted: " + fileName);
+                        PeerFileID id = new PeerFileID(null,fileName.toString(),null,0);
+                        pf.delete(id);
                     }
                     if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
 
@@ -55,7 +72,7 @@ public class WatchFolder implements Runnable {
 
                 }
 
-                // STEP8: Reset the watch key everytime for continuing to use it for further event polling
+                // Reset the watch key everytime for continuing to use it for further event polling
                 boolean valid = watchKey.reset();
                 if (!valid) {
                     break;

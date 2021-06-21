@@ -11,11 +11,11 @@ import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
-import pt.ipb.dsys.peerbox.util.WatchFolder;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,17 +26,10 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     public static final String gossipHostname = "gossip-router";
-    public static final String peerBox = ("peerBox\\");
+    public static final String peerBox = ("peerBox/");
 
 
     public static void main(String[] args) {
-
-
-
-        logger.warn("Starting a background thread for watching folders.");
-        new Thread(new WatchFolder()).start();
-        ExecutorService executor = Executors.newCachedThreadPool();
-        executor.submit(new WatchCallable());
 
         PeerUtil.localhostFix(gossipHostname);
         boolean isNode = args.length > 0 && args[0].equals("node");
@@ -50,6 +43,10 @@ public class Main {
 
         try (JChannel channel = new JChannel(DefaultProtocols.gossipRouter(gossipHostname,12001))) {
 
+            logger.info("Starting a background thread for watching folders.");
+            //new Thread(new WatchFolder()).start();
+            ExecutorService executor = Executors.newCachedThreadPool();
+
             LoggingReceiver receiver = new LoggingReceiver(channel);
             channel.setReceiver(receiver);
             channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
@@ -58,6 +55,7 @@ public class Main {
             Sleeper.sleep(5000);
 
             PeerFile peerFile = new PeerFile(channel,receiver);
+            executor.submit(new WatchCallable(peerFile));
             //Map<String,OutputStream> files = new ConcurrentHashMap<>();
 
             String hostname = DnsHelper.getHostName();
@@ -87,11 +85,12 @@ public class Main {
                         if (line.startsWith("quit") || line.startsWith("exit"))
                             break;
                         else if (line.startsWith("1")) {
-
+                            Scanner intInput = new Scanner( System.in );
                             System.out.print("> Enter the filename\n");
                             String filename = in.readLine();
                             System.out.print("> Enter the number of the replicas(per chunks)\n");
-                            int replicas = in.read();
+                            int replicas = intInput.nextInt();
+                            //int replicas = in.read();
                             System.out.print("> Enter the file content [bytes]\n");
                             peerFile.save(filename,replicas);
 

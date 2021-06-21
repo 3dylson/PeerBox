@@ -23,7 +23,7 @@ public interface PeerBox {
      * @return The ID of the file in the PeerBox
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
-    PeerFileID save(String path, int replicas) throws PeerBoxException, IOException;
+    PeerFileID save(String path, int replicas) throws Exception;
 
 
     /**

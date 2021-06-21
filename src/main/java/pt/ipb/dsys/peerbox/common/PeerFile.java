@@ -103,31 +103,46 @@ public class PeerFile implements PeerBox, Serializable {
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
     @Override
-    public PeerFileID save(String path, int replicas) throws PeerBoxException, IOException {
+    public PeerFileID save(String path, int replicas) throws Exception {
 
         File peerBoxFile = new File(peerBox+path);
         if (peerBoxFile.exists()){
             logger.warn("File {}, already exists.",path);
+            //maybe overwrite..
             return null;
         }
         peerBoxFile.createNewFile();
+        Sleeper.sleep(5000);
+
+        /*FileOutputStream inF = new FileOutputStream(peerBoxFile);
+        String content;
+        do {
+            content = in.readLine();
+            inF.write(content.getBytes());
+        } while (!content.endsWith("exit"));
+        inF.close();*/
+
+
         Random random = new Random();
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
         List<UUID> chunksList = new ArrayList<>();
 
+
+
         FileInputStream inFile = new FileInputStream(peerBoxFile);
 
+        int bytes =0;
         for (;;) {
             byte[] chunk=new byte[BLOCK_SIZE];
-            int bytes=inFile.read(chunk);
+            bytes=inFile.read(chunk);
             if(bytes == -1){
                 setData(chunk);
                 break;
             }
 
-            if(receivers.isEmpty()){
+            /*if(receivers.size()<1){
                 logger.warn("There's no receivers!");
-            }
+            }*/
             UUID chunkId = UUID.randomUUID();
             chunksList.add(chunkId);
 
@@ -225,7 +240,10 @@ public class PeerFile implements PeerBox, Serializable {
         syncChunks(path, fileChunks);
 
         Sleeper.sleep(5000);
-        new File(peerBox+path).delete();
+        File delFile = new File(peerBox+path);
+        if (delFile.exists()){
+            delFile.delete();
+        }
         peerFiles.remove(path);
         receiver.setState(LoggingReceiver.STATES.DEFAULT);
     }
