@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static pt.ipb.dsys.peerbox.Main.peerBox;
+
 public class LoggingReceiver implements Receiver, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
@@ -126,7 +128,7 @@ public class LoggingReceiver implements Receiver, Serializable {
                    ((PeerFileID) message).setChunk(chunkBytes);
 
                    List<UUID> fileChunks = getFiles().get(((PeerFileID) message).getFileName());
-                   fetchByteList.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
+                   //fetchByteList.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
 
                    if (((PeerFileID) message).getChunkNumber() == fileChunks.size() - 1) {
 
@@ -147,14 +149,30 @@ public class LoggingReceiver implements Receiver, Serializable {
            else if (state == STATES.DELETE) {
                logger.info("-- deleting all chunks of the file: {}",((PeerFileID) message).getFileName());
                chunks.remove(((PeerFileID) message).getId());
+               files.remove(((PeerFileID) message).getFileName());
            }
        }
 
        else if(message instanceof PeerFile) {
 
-           logger.info("Fetched file infos: ");
-           String info = ((PeerFile) message).getFileId().getChunk().toString();
-           logger.info("{}",info);
+           //?((PeerFile) message).save()
+
+           String outputFile = new File(((PeerFile) message).getFileId().getFileName()).getName();
+           outputFile = peerBox+outputFile;
+           try {
+               OutputStream out = new FileOutputStream(outputFile);
+               out.write(((PeerFile) message).getData());
+               ((PeerFile) message).getPeerFiles().put(((PeerFile) message).getFileId().getFileName(),out);
+
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+
+           OutputStream thisFile = ((PeerFile) message).getPeerFiles().get(((PeerFile) message).getFileId().getFileName());
+           //peerFiles.put(path,out);
+           logger.info("Fetched file infos: {}",thisFile);
+           /*String info = ((PeerFile) message).getFileId().getChunk().toString();
+           logger.info("{}",info);*/
        }
 
     }

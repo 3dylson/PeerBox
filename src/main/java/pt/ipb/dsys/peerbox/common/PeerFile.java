@@ -10,11 +10,9 @@ import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
 import static pt.ipb.dsys.peerbox.Main.peerBox;
@@ -28,6 +26,8 @@ public class PeerFile implements PeerBox, Serializable {
     private PeerFileID fileId;
     private byte[] data;
     private int totalChunks = 0;
+
+    Map<String, OutputStream> peerFiles = new ConcurrentHashMap<>();
 
     JChannel channel;
     LoggingReceiver receiver;
@@ -57,6 +57,14 @@ public class PeerFile implements PeerBox, Serializable {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    public Map<String, OutputStream> getPeerFiles() {
+        return peerFiles;
+    }
+
+    public void setPeerFiles(Map<String, OutputStream> peerFiles) {
+        this.peerFiles = peerFiles;
     }
 
     public JChannel getChannel() {
@@ -97,60 +105,32 @@ public class PeerFile implements PeerBox, Serializable {
     @Override
     public PeerFileID save(String path, int replicas) throws PeerBoxException, IOException {
 
+        File peerBoxFile = new File(peerBox+path);
+        if (peerBoxFile.exists()){
+            logger.warn("File {}, already exists.",path);
+            return null;
+        }
+        peerBoxFile.createNewFile();
         Random random = new Random();
-        FileInputStream inFile = new FileInputStream(peerBox+path);
-
-        for (;;) {
-            byte[] buf=new byte[8096];
-            int bytes=inFile.read(buf);
-            if(bytes == -1){
-                setData(buf);
-                break;
-            }
-        }
-
-
-        //region https://gist.github.com/antoniomaria/598ea89d54accef1a1f5
-        int blockCount = (data.length + BLOCK_SIZE - 1) / BLOCK_SIZE;
-        byte[] range = null;
-
-        for (int i = 1; i < blockCount; i++) {
-            int idx = (i - 1) * BLOCK_SIZE;
-            range = Arrays.copyOfRange(data, idx, idx + BLOCK_SIZE);
-        }
-        int end = -1;
-        if (data.length % BLOCK_SIZE == 0) {
-            end = data.length;
-        } else {
-            end = data.length % BLOCK_SIZE + BLOCK_SIZE * (blockCount - 1);
-        }
-        range = Arrays.copyOfRange(data, (blockCount - 1) * BLOCK_SIZE, end);
-        //endregion
-
-
-
-        /*List<byte[]> data = Collections.singletonList(this.getData());
-        List<List<byte[]>> chunks = Lists.partition(data,BLOCK_SIZE);*/
-
-        List<byte[]> chunks = Collections.singletonList(range);
-
-
-
-
-        //ArrayList<List<byte[]>> serializableChunks = (ArrayList<List<byte[]>>) Lists.partition(data,BLOCK_SIZE);
-        //ArrayList<List<byte[]>> serializableChunks = new ArrayList<>(chunks);
-
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
         List<UUID> chunksList = new ArrayList<>();
-        if(receivers.isEmpty()){
-            logger.warn("There's no receivers!");
-        }
 
+        FileInputStream inFile = new FileInputStream(peerBoxFile);
 
-        chunks.iterator().forEachRemaining(chunk ->
-        {
+        for (;;) {
+            byte[] chunk=new byte[BLOCK_SIZE];
+            int bytes=inFile.read(chunk);
+            if(bytes == -1){
+                setData(chunk);
+                break;
+            }
+
+            if(receivers.isEmpty()){
+                logger.warn("There's no receivers!");
+            }
             UUID chunkId = UUID.randomUUID();
             chunksList.add(chunkId);
+
             try {
 
                 receiver.setState(LoggingReceiver.STATES.SAVE);
@@ -167,7 +147,8 @@ public class PeerFile implements PeerBox, Serializable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        });
+
+        }
 
         setTotalChunks(chunksList.size());
 
@@ -183,6 +164,13 @@ public class PeerFile implements PeerBox, Serializable {
             receiver.getFiles().put(path,chunksList);
             logger.info("File: {}, saved with {} replicas.",path,replicas);
         }
+
+        String outputFile = new File(path).getName();
+        outputFile = peerBox+outputFile;
+        OutputStream out = new FileOutputStream(outputFile);
+        out.write(getData());
+        peerFiles.put(path,out);
+
         return filePathId;
     }
 
@@ -200,14 +188,23 @@ public class PeerFile implements PeerBox, Serializable {
     public PeerFile fetch(PeerFileID id) throws PeerBoxException {
 
         String path = id.fileName;
-        List<UUID> fileChunks = receiver.getFiles().get(path);
+        OutputStream out = peerFiles.get(path);
 
-        receiver.setState(LoggingReceiver.STATES.FETCH);
-        syncChunks(path, fileChunks);
+        if (out == null){
+            logger.info("File not found! Requesting chunks to other peers ...");
+            List<UUID> fileChunks = receiver.getFiles().get(path);
 
+            receiver.setState(LoggingReceiver.STATES.FETCH);
+            syncChunks(path, fileChunks);
+            Sleeper.sleep(3000);
+            receiver.setState(LoggingReceiver.STATES.DEFAULT);
 
-        Sleeper.sleep(5000);
-        receiver.setState(LoggingReceiver.STATES.DEFAULT);
+        }
+        else{
+
+            logger.info("File fetched: {}", out);
+
+        }
 
         return (PeerFile) receiver.getFiles().get(path);
     }
@@ -228,11 +225,13 @@ public class PeerFile implements PeerBox, Serializable {
         syncChunks(path, fileChunks);
 
         Sleeper.sleep(5000);
+        new File(peerBox+path).delete();
+        peerFiles.remove(path);
         receiver.setState(LoggingReceiver.STATES.DEFAULT);
     }
 
     private void syncChunks(String path, List<UUID> fileChunks) {
-        if(fileChunks.isEmpty()) {
+        if(fileChunks == null) {
             logger.warn("Chunks not found");
         }
         for (int i = 0; i < fileChunks.size(); i++) {
@@ -246,4 +245,15 @@ public class PeerFile implements PeerBox, Serializable {
     }
 
 
+    public boolean listFiles() {
+        if (!peerFiles.isEmpty()) {
+            peerFiles.forEach((key, value) -> logger.info("{} : {}",key,value));
+            return true;
+        }
+        else{
+            logger.warn("No files to list.");
+            return false;
+        }
+
+    }
 }

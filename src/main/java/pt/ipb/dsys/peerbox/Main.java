@@ -10,10 +10,15 @@ import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
+import pt.ipb.dsys.peerbox.util.WatchCallable;
+import pt.ipb.dsys.peerbox.util.WatchFolder;
 
-import java.io.*;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 
 public class Main {
 
@@ -25,6 +30,13 @@ public class Main {
 
 
     public static void main(String[] args) {
+
+
+
+        logger.warn("Starting a background thread for watching folders.");
+        new Thread(new WatchFolder()).start();
+        ExecutorService executor = Executors.newCachedThreadPool();
+        executor.submit(new WatchCallable());
 
         PeerUtil.localhostFix(gossipHostname);
         boolean isNode = args.length > 0 && args[0].equals("node");
@@ -46,7 +58,7 @@ public class Main {
             Sleeper.sleep(5000);
 
             PeerFile peerFile = new PeerFile(channel,receiver);
-            Map<String,OutputStream> files = new ConcurrentHashMap<>();
+            //Map<String,OutputStream> files = new ConcurrentHashMap<>();
 
             String hostname = DnsHelper.getHostName();
 
@@ -80,61 +92,25 @@ public class Main {
                             String filename = in.readLine();
                             System.out.print("> Enter the number of the replicas(per chunks)\n");
                             int replicas = in.read();
-                            /*File newFile = new File(peerBox+filename);
-                            if (newFile.exists()){
-                                logger.warn("The file: {}, already exists.",filename);
-                                break;
-                            }
-                            newFile.createNewFile();*/
-                            Sleeper.sleep(100);
                             System.out.print("> Enter the file content [bytes]\n");
-                            //FileInputStream inFile = new FileInputStream(peerBox+filename);
-                            /*int bytes;
-                            do {
-                                byte[] buf=new byte[8096];
-                                bytes=inFile.read(buf);
-                            } while (bytes != -1);*/
-
-                            /*try {
-                                for (;;) {
-                                    byte[] buf=new byte[8096];
-                                    int bytes=inFile.read(buf);
-                                        if(bytes == -1){
-                                            peerFile.setData(buf);
-                                            break;
-                                        }
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }finally {*/
-
-
-                                new File(peerBox+filename).createNewFile();
-                                String output_filename= new File(peerFile.save(filename,replicas).getFileName()).getName();
-                                output_filename = peerBox + output_filename;
-                                OutputStream out = new FileOutputStream(output_filename);
-                                files.put(filename,out);
-                            //}
+                            peerFile.save(filename,replicas);
 
                         }
                         else if (line.startsWith("2")) {
+                            logger.info("Listing files on peerBox: ");
                             receiver.listFiles();
+
                         }
                         else if (line.startsWith("3")){
                             System.out.print("> Enter the filename to fetch\n");
                             String filename = in.readLine();
-                            OutputStream out = files.get(filename);
-                            if(out == null){
-                                logger.info("File not found! Requesting chunks to other peers ...");
-                                PeerFileID id = new PeerFileID(null,filename,null,0);
-                                peerFile.fetch(id);
-                            }
+                            PeerFileID id = new PeerFileID(null,filename,null,0);
+                            peerFile.fetch(id);
 
                         }
                         else if (line.startsWith("4")) {
                             System.out.print("> Enter the filename to delete\n");
                             String filename = in.readLine();
-                            files.remove(filename);
                             PeerFileID id = new PeerFileID(null,filename,null,0);
                             peerFile.delete(id);
                         }
@@ -149,7 +125,7 @@ public class Main {
                 while (true) {
                     try{
                         logger.info("-- listing {} files: ",hostname);
-                        receiver.listFiles();
+                        peerFile.listFiles();
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
                         logger.warn("I have disconnected! {}",hostname);
