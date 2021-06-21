@@ -1,9 +1,9 @@
 package pt.ipb.dsys.peerbox.common;
 
-import org.jgroups.util.UUID;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 
 public class PeerFileID implements Serializable {
 

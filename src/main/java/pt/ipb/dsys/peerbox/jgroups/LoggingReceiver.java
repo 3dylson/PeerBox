@@ -1,17 +1,13 @@
 package pt.ipb.dsys.peerbox.jgroups;
 
 import org.jgroups.*;
-import org.jgroups.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static pt.ipb.dsys.peerbox.Main.peerBox;
@@ -139,17 +135,20 @@ public class LoggingReceiver implements Receiver, Serializable {
                        } catch (Exception e) {
                            e.printStackTrace();
                        }
-
                    }
-
-
                }
            }
 
            else if (state == STATES.DELETE) {
-               logger.info("-- deleting all chunks of the file: {}",((PeerFileID) message).getFileName());
-               chunks.remove(((PeerFileID) message).getId());
-               files.remove(((PeerFileID) message).getFileName());
+               List<byte[]> chunkBytes = chunks.get(((PeerFileID) message).getId());
+               if (!chunkBytes.isEmpty()) {
+                   logger.info("-- deleting all chunks of the file: {}",((PeerFileID) message).getFileName());
+                   chunks.remove(((PeerFileID) message).getId());
+                   files.remove(((PeerFileID) message).getFileName());
+               }
+               else {
+                   logger.info("-- I dont have the chunks of the file: {} ...",((PeerFileID) message).getFileName());
+               }
            }
        }
 
@@ -170,11 +169,26 @@ public class LoggingReceiver implements Receiver, Serializable {
 
            OutputStream thisFile = ((PeerFile) message).getPeerFiles().get(((PeerFile) message).getFileId().getFileName());
            //peerFiles.put(path,out);
-           logger.info("Fetched file infos: {}",thisFile);
+           logger.info("Fetched file infos: {}",thisFile.toString());
            /*String info = ((PeerFile) message).getFileId().getChunk().toString();
            logger.info("{}",info);*/
        }
 
+       else if (message instanceof String) {
+
+           if ("Save".equals(message)) {
+               this.setState(STATES.SAVE);
+           }
+           else if("Fetch".equals(message)) {
+               this.setState(STATES.FETCH);
+           }
+           else if("Delete".equals(message)) {
+               this.setState(STATES.DELETE);
+           }
+           else if("Default".equals(message)) {
+               this.setState(STATES.DEFAULT);
+           }
+       }
     }
 
     public void listFiles() {
@@ -187,11 +201,9 @@ public class LoggingReceiver implements Receiver, Serializable {
         }
     }
 
-
     // Returns the number of connected nodes in the cluster
     public int clusterSize() {
         return members.size();
     }
-
 
 }

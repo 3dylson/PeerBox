@@ -1,7 +1,6 @@
 package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
-import org.jgroups.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
@@ -13,8 +12,9 @@ import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
 
-import java.io.*;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,7 +45,6 @@ public class Main {
             logger.info("Starting a background thread for watching folders.");
             //new Thread(new WatchFolder()).start();
             ExecutorService executor = Executors.newCachedThreadPool();
-
             LoggingReceiver receiver = new LoggingReceiver(channel);
             channel.setReceiver(receiver);
             channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
@@ -55,27 +54,22 @@ public class Main {
 
             PeerFile peerFile = new PeerFile(channel,receiver);
             executor.submit(new WatchCallable(peerFile));
-            //Map<String,OutputStream> files = new ConcurrentHashMap<>();
-
             String hostname = DnsHelper.getHostName();
 
             File dir = new File(peerBox);
             if (!dir.exists()){
                 dir.mkdir();
             }
-
-
             if(!isNode) {
                 while (true) {
                     try {
                         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
                         //File[] f = dir.listFiles();
                         System.out.print("""
-                                > Welcome to our PeerBox! :)
-                                [1] Create a file
-                                [2] List all files
-                                [3] Fetch a file
-                                [4] Delete a file
+                                > Welcome to the PeerBox! :)
+                                [1] List all files
+                                [2] Fetch a file
+                                [3] Delete a file
                                 Or "exit" to leave.
                                 """);
                         System.out.flush();
@@ -84,50 +78,21 @@ public class Main {
                         if (line.startsWith("quit") || line.startsWith("exit"))
                             break;
                         else if (line.startsWith("1")) {
-                            /*Scanner intInput = new Scanner( System.in );
-                            System.out.print("> Enter the filename\n");
-                            String filename = in.readLine();
-                            System.out.print("> Enter the number of the replicas(per chunks)\n");
-                            int replicas = intInput.nextInt();
-                            System.out.print("> Enter the file content [bytes]\n");
-                            *//*while(true) {
-                                Util.keyPress(String.format("<press enter to send %s>\n", filename));
-                                peerFile.save(filename,replicas);
-                            }*//*
-                            InputStream is = new ByteArrayInputStream(new byte[] { 0, 1, 2, 3, 4, 5, 6 }); // not really known
-                            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-                            int nRead;
-                            byte[] data = new byte[4];
-
-                            while ((nRead = is.read(data, 0, data.length)) != -1) {
-                                buffer.write(data, 0, nRead);
-                            }
-
-                            buffer.flush();
-                            peerFile.setData(buffer.toByteArray());
-                            peerFile.save(filename,replicas);*/
-
-                        }
-                        else if (line.startsWith("2")) {
                             logger.info("Listing files on peerBox: ");
                             receiver.listFiles();
-
                         }
-                        else if (line.startsWith("3")){
+                        else if (line.startsWith("2")){
                             System.out.print("> Enter the filename to fetch\n");
                             String filename = in.readLine();
                             PeerFileID id = new PeerFileID(null,filename,null,0);
                             peerFile.fetch(id);
-
                         }
-                        else if (line.startsWith("4")) {
+                        else if (line.startsWith("3")) {
                             System.out.print("> Enter the filename to delete\n");
                             String filename = in.readLine();
                             PeerFileID id = new PeerFileID(null,filename,null,0);
                             peerFile.delete(id);
                         }
-
                     } catch (PeerBoxException e) {
                         logger.info("The node: {} is disconnecting", hostname);
                         channel.close();
@@ -137,8 +102,8 @@ public class Main {
             } else {
                 while (true) {
                     try{
-                        logger.info("-- listing {} files: ",hostname);
-                        peerFile.listFiles();
+                        logger.info("-- ({}) have this files chunks: ",hostname);
+                        receiver.listFiles();
                         Sleeper.sleep(300000);
                     } catch (Exception e) {
                         logger.warn("I have disconnected! {}",hostname);
@@ -149,7 +114,4 @@ public class Main {
             logger.error(e.getMessage(), e);
         }
     }
-
-
-
 }

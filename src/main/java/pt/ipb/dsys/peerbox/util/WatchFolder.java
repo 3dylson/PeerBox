@@ -1,6 +1,7 @@
 package pt.ipb.dsys.peerbox.util;
 
 
+import pt.ipb.dsys.peerbox.DnsHelper;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
 
@@ -52,6 +53,7 @@ public class WatchFolder {
                     // Perform necessary action with the event
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
 
+
                         System.out.println("A new file is created : " + fileName);
                         File newFile = new File(peerBox+fileName);
                         if (newFile.exists()) {
@@ -63,20 +65,16 @@ public class WatchFolder {
 
                     if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
 
-                        System.out.println("A file has been deleted: " + fileName);
-                        PeerFileID id = new PeerFileID(null,fileName.toString(),null,0);
-                        pf.delete(id);
+                        String hostname = DnsHelper.getHostName();
+                        System.out.println("File has been deleted only on this peer (" + hostname + ") : "+fileName);
+
                     }
                     if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
 
-                        //System.out.println("A file has been modified: " + fileName);
-                        /*File newFile = new File(peerBox+fileName);
-                        if (newFile.exists()) {
-                            Path path = Paths.get(peerBox+fileName);
-                            pf.setData(Files.readAllBytes(path));
-                            pf.save(fileName.toString(),2);
-                        }*/
+                        // TODO...
                     }
+
+                    Sleeper.sleep(5000);
 
                 }
 
@@ -85,6 +83,7 @@ public class WatchFolder {
                 if (!valid) {
                     break;
                 }
+
 
             }
 
