@@ -105,64 +105,68 @@ public class PeerFile implements PeerBox, Serializable {
     @Override
     public PeerFileID save(String path, int replicas) throws Exception {
 
-        File peerBoxFile = new File(peerBox+path);
-        if (peerBoxFile.exists()){
-            logger.warn("File {}, already exists.",path);
-            //maybe overwrite..
-            return null;
-        }
-        peerBoxFile.createNewFile();
-        Sleeper.sleep(5000);
-
-        /*FileOutputStream inF = new FileOutputStream(peerBoxFile);
-        String content;
-        do {
-            content = in.readLine();
-            inF.write(content.getBytes());
-        } while (!content.endsWith("exit"));
-        inF.close();*/
-
-
         Random random = new Random();
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
         List<UUID> chunksList = new ArrayList<>();
 
+        if(receivers.isEmpty()){
+            logger.warn("There's no receivers!");
+        }
 
+        int blockSize = BLOCK_SIZE;
+        int blockCount = (data.length + blockSize - 1) / blockSize;
 
-        FileInputStream inFile = new FileInputStream(peerBoxFile);
+        byte[] chunk;
 
-        int bytes =0;
-        for (;;) {
-            byte[] chunk=new byte[BLOCK_SIZE];
-            bytes=inFile.read(chunk);
-            if(bytes == -1){
-                setData(chunk);
-                break;
-            }
+        try {
 
-            /*if(receivers.size()<1){
-                logger.warn("There's no receivers!");
-            }*/
-            UUID chunkId = UUID.randomUUID();
-            chunksList.add(chunkId);
+            receiver.setState(LoggingReceiver.STATES.SAVE);
 
-            try {
+            for (int i = 1; i < blockCount; i++) {
+                int idx = (i - 1) * blockSize;
 
-                receiver.setState(LoggingReceiver.STATES.SAVE);
+                chunk = Arrays.copyOfRange(data, idx, idx + blockSize);
 
-                for (int i = 0; i < replicas; i++) {
+                UUID chunkId = UUID.randomUUID();
+                chunksList.add(chunkId);
+
+                for (int j = 0; j < replicas; j++) {
 
                     int receive = random.nextInt(receivers.size());
                     Address destination = channel.getView().getMembers().get(receive);
 
-                    PeerFileID fileID = new PeerFileID(chunkId,path , Collections.singletonList(chunk),i);
-                    channel.send(new ObjectMessage(destination,fileID));
+                    PeerFileID fileID = new PeerFileID(chunkId,path , Collections.singletonList(chunk),j);
+                    ObjectMessage msg = new ObjectMessage(destination,fileID);
+                    channel.send(msg);
                     //setFileId(fileID);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+                    }
             }
 
+        } finally {
+
+            // Last chunk
+            int end = -1;
+            if (data.length % blockSize == 0) {
+                end = data.length;
+            } else {
+                end = data.length % blockSize + blockSize * (blockCount - 1);
+            }
+            chunk = Arrays.copyOfRange(data, (blockCount - 1) * blockSize, end);
+
+            UUID chunkId = UUID.randomUUID();
+            chunksList.add(chunkId);
+
+            for (int j = 0; j < replicas; j++) {
+
+                int receive = random.nextInt(receivers.size());
+                Address destination = channel.getView().getMembers().get(receive);
+
+                PeerFileID fileID = new PeerFileID(chunkId,path , Collections.singletonList(chunk),j);
+                ObjectMessage msg = new ObjectMessage(destination,fileID);
+                //channel.send(msg);
+                receiver.receive(msg);
+                //setFileId(fileID);
+            }
         }
 
         setTotalChunks(chunksList.size());
@@ -183,7 +187,7 @@ public class PeerFile implements PeerBox, Serializable {
         String outputFile = new File(path).getName();
         outputFile = peerBox+outputFile;
         OutputStream out = new FileOutputStream(outputFile);
-        out.write(getData());
+        out.write(data);
         peerFiles.put(path,out);
 
         return filePathId;

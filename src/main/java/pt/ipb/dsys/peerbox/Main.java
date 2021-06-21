@@ -1,6 +1,7 @@
 package pt.ipb.dsys.peerbox;
 
 import org.jgroups.JChannel;
+import org.jgroups.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
@@ -12,9 +13,7 @@ import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -85,14 +84,29 @@ public class Main {
                         if (line.startsWith("quit") || line.startsWith("exit"))
                             break;
                         else if (line.startsWith("1")) {
-                            Scanner intInput = new Scanner( System.in );
+                            /*Scanner intInput = new Scanner( System.in );
                             System.out.print("> Enter the filename\n");
                             String filename = in.readLine();
                             System.out.print("> Enter the number of the replicas(per chunks)\n");
                             int replicas = intInput.nextInt();
-                            //int replicas = in.read();
                             System.out.print("> Enter the file content [bytes]\n");
-                            peerFile.save(filename,replicas);
+                            *//*while(true) {
+                                Util.keyPress(String.format("<press enter to send %s>\n", filename));
+                                peerFile.save(filename,replicas);
+                            }*//*
+                            InputStream is = new ByteArrayInputStream(new byte[] { 0, 1, 2, 3, 4, 5, 6 }); // not really known
+                            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+                            int nRead;
+                            byte[] data = new byte[4];
+
+                            while ((nRead = is.read(data, 0, data.length)) != -1) {
+                                buffer.write(data, 0, nRead);
+                            }
+
+                            buffer.flush();
+                            peerFile.setData(buffer.toByteArray());
+                            peerFile.save(filename,replicas);*/
 
                         }
                         else if (line.startsWith("2")) {
