@@ -102,9 +102,12 @@ public class Main {
             } else {
                 while (true) {
                     try{
-                        logger.info("-- ({}) have this files chunks: ",hostname);
-                        receiver.listFiles();
-                        Sleeper.sleep(300000);
+                        if(!peerFile.getPeerFiles().isEmpty()){
+                            logger.info("-- ({}) have this files chunks: ",hostname);
+                            peerFile.listFiles();
+                            Sleeper.sleep(50000);
+                        }
+                        Sleeper.sleep(20000);
                     } catch (Exception e) {
                         logger.warn("I have disconnected! {}",hostname);
                     }
