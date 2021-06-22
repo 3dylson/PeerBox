@@ -1,5 +1,8 @@
 package pt.ipb.dsys.peerbox.common;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 /**
  * The main interface that specifies the operation of the PeerBox system.
  * It contains the basic functionality.
@@ -20,7 +23,7 @@ public interface PeerBox {
      * @return The ID of the file in the PeerBox
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
-    PeerFileID save(String path, int replicas) throws PeerBoxException;
+    PeerFileID save(String path, int replicas) throws Exception;
 
 
     /**
@@ -32,7 +35,7 @@ public interface PeerBox {
      * @return the resulting file stored in the PeerBox system and associated metadata
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
-    PeerFile fetch(PeerFileID id) throws PeerBoxException, Exception;
+    PeerFile fetch(PeerFileID id) throws Exception;
 
 
     /**
@@ -40,11 +43,8 @@ public interface PeerBox {
      * @param id The ID of the file in the PeerBox
      * @throws PeerBoxException in case some unexpected (which?) condition happens
      */
-    void delete(PeerFileID id) throws PeerBoxException;
+    void delete(PeerFileID id) throws Exception;
 
-
-
-     PeerFileID data(String path) throws PeerBoxException;
 
 
 }
