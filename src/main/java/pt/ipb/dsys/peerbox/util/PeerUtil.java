@@ -2,6 +2,7 @@ package pt.ipb.dsys.peerbox.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class PeerUtil {
 
@@ -27,6 +28,16 @@ public class PeerUtil {
     public static void localhostFix(String gossipHostname) {
         if (!isPeer(gossipHostname))
             System.setProperty("jgroups.bind_addr", "127.0.0.1");
+    }
+
+
+    public static byte[] trimBytes(byte[] bytes){
+        int i = bytes.length - 1;
+        while (i >= 0 && bytes[i] == 0)
+        {
+            --i;
+        }
+        return Arrays.copyOf(bytes, i + 1);
     }
 
 }

@@ -13,10 +13,10 @@ public class PeerFileID implements Serializable {
 
     UUID id;
     String fileName;
-    List<byte[]> chunk;
+    byte[] chunk;
     int chunkNumber;
 
-    public PeerFileID(UUID id, String fileName, List<byte[]> chunk, int chunkNumber) {
+    public PeerFileID(UUID id, String fileName, byte[] chunk, int chunkNumber) {
         this.id = id;
         this.fileName = fileName;
         this.chunk = chunk;
@@ -40,11 +40,11 @@ public class PeerFileID implements Serializable {
         this.fileName = fileName;
     }
 
-    public List<byte[]> getChunk() {
+    public byte[] getChunk() {
         return chunk;
     }
 
-    public void setChunk(List<byte[]> chunk) {
+    public void setChunk(byte[] chunk) {
         this.chunk = chunk;
     }
 

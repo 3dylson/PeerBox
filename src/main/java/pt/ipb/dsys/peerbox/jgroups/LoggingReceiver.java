@@ -1,10 +1,13 @@
 package pt.ipb.dsys.peerbox.jgroups;
 
+import com.google.common.primitives.Bytes;
 import org.jgroups.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
+import pt.ipb.dsys.peerbox.util.PeerUtil;
+import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.*;
 import java.util.*;
@@ -20,13 +23,14 @@ public class LoggingReceiver implements Receiver, Serializable {
     private View new_view;
 
     List<Address> members = new LinkedList<>();
-    Map<String, List<UUID>> files = new ConcurrentHashMap<>();
-    Map<UUID, List<byte[]>> chunks = new ConcurrentHashMap<>();
+    Map<String, Integer> totalChunkfile = new ConcurrentHashMap<>();
+    Map<UUID, byte[]> chunks = new ConcurrentHashMap<>();
 
-    List<List<byte[]>> fetchByteList = new ArrayList<>();
+    List<byte[]> tmpchunks;
+
 
     public enum STATES {
-        DEFAULT, SAVE, FETCH, DELETE
+        DEFAULT, SAVE, FETCH, DELETE, FILE
     }
 
     private STATES state = STATES.DEFAULT;
@@ -59,19 +63,19 @@ public class LoggingReceiver implements Receiver, Serializable {
         this.members = members;
     }
 
-    public Map<String, List<UUID>> getFiles() {
-        return files;
+    public Map<String, Integer> getTotalChunkfile() {
+        return totalChunkfile;
     }
 
-    public void setFiles(Map<String, List<UUID>> files) {
-        this.files = files;
+    public void setTotalChunkfile(Map<String, Integer> totalChunkfile) {
+        this.totalChunkfile = totalChunkfile;
     }
 
-    public Map<UUID, List<byte[]>> getChunks() {
+    public Map<UUID, byte[]> getChunks() {
         return chunks;
     }
 
-    public void setChunks(Map<UUID, List<byte[]>> chunks) {
+    public void setChunks(Map<UUID, byte[]> chunks) {
         this.chunks = chunks;
     }
 
@@ -115,36 +119,80 @@ public class LoggingReceiver implements Receiver, Serializable {
            if (state == STATES.SAVE){
                logger.info("Received chunk number {}, of the file: {}.",((PeerFileID) message).getChunkNumber(), ((PeerFileID) message).getFileName() );
                chunks.put(((PeerFileID) message).getId(),((PeerFileID) message).getChunk());
+
            }
 
            else if (state == STATES.FETCH){
-               List<byte[]> chunkBytes = chunks.get(((PeerFileID) message).getId());
-               if (!chunkBytes.isEmpty()) {
+               byte[] chunkBytes = chunks.get(((PeerFileID) message).getId());
+               if (chunkBytes != null) {
                    logger.info("-- sending chunks of the file: {} ... ", ((PeerFileID) message).getFileName());
                    ((PeerFileID) message).setChunk(chunkBytes);
 
-                   List<UUID> fileChunks = getFiles().get(((PeerFileID) message).getFileName());
-                   //fetchByteList.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
+                   try {
+                       channel.send(new ObjectMessage(msg.src(),"File"));
+                       Sleeper.sleep(3000);
+                       channel.send(new ObjectMessage(msg.src(),message));
+                   } catch (Exception e) {
+                       e.printStackTrace();
+                   }
 
-                   if (((PeerFileID) message).getChunkNumber() == fileChunks.size() - 1) {
 
-                       try {
-                           PeerFile file = new PeerFile(null,null);
-                           file.setFileId((PeerFileID) message);
-                           channel.send(new ObjectMessage(msg.src(),file));
-                       } catch (Exception e) {
-                           e.printStackTrace();
+               }
+           }
+
+           else if (state == STATES.FILE) {
+
+               tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
+               int fetchTotal = totalChunkfile.get(((PeerFileID) message).getFileName());
+
+               if (((PeerFileID) message).getChunkNumber() == fetchTotal) {
+
+                   byte[] fileBytes = new byte[0];
+                   File temp = new File(peerBox+((PeerFileID) message).getFileName());
+                   for (int i = 1; i <= fetchTotal; i++) {
+                       if(i == 1){
+                           fileBytes=tmpchunks.get(i);
+                       }else{
+                           fileBytes = Bytes.concat(fileBytes, tmpchunks.get(i));
                        }
                    }
+                   fileBytes= PeerUtil.trimBytes(fileBytes);
+                   try {
+                       FileWriter writer = new FileWriter(temp);
+                       InputStream in = new ByteArrayInputStream(fileBytes);
+                       writer.flush();
+                       int next = in.read();
+                       while (next != -1) {
+
+                           writer.write(next);
+                           next = in.read();
+                       }
+                       writer.close();
+                   } catch (IOException ie) {
+                       ie.printStackTrace();
+                   } finally {
+                       logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
+                       logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
+                       setState(STATES.DEFAULT);
+                   }
+
+
+                   /*try {
+                       PeerFile file = new PeerFile(null,null);
+                       file.setFileId((PeerFileID) message);
+                       channel.send(new ObjectMessage(msg.src(),file));
+                   } catch (Exception e) {
+                       e.printStackTrace();
+                   }*/
                }
            }
 
            else if (state == STATES.DELETE) {
-               List<byte[]> chunkBytes = chunks.get(((PeerFileID) message).getId());
-               if (!chunkBytes.isEmpty()) {
+               byte[] chunkBytes = chunks.get(((PeerFileID) message).getId());
+               if (chunkBytes != null) {
                    logger.info("-- deleting all chunks of the file: {}",((PeerFileID) message).getFileName());
                    chunks.remove(((PeerFileID) message).getId());
-                   files.remove(((PeerFileID) message).getFileName());
+
                }
                else {
                    logger.info("-- I dont have the chunks of the file: {} ...",((PeerFileID) message).getFileName());
@@ -154,24 +202,10 @@ public class LoggingReceiver implements Receiver, Serializable {
 
        else if(message instanceof PeerFile) {
 
-           //?((PeerFile) message).save()
-
-           String outputFile = new File(((PeerFile) message).getFileId().getFileName()).getName();
-           outputFile = peerBox+outputFile;
-           try {
-               OutputStream out = new FileOutputStream(outputFile);
-               out.write(((PeerFile) message).getData());
-               ((PeerFile) message).getPeerFiles().put(((PeerFile) message).getFileId().getFileName(),out);
-
-           } catch (IOException e) {
-               e.printStackTrace();
+           if (state == STATES.SAVE){
+               totalChunkfile.put(((PeerFile) message).getFileId().getFileName(),((PeerFile) message).getTotalChunks());
            }
 
-           OutputStream thisFile = ((PeerFile) message).getPeerFiles().get(((PeerFile) message).getFileId().getFileName());
-           //peerFiles.put(path,out);
-           logger.info("Fetched file infos: {}",thisFile.toString());
-           /*String info = ((PeerFile) message).getFileId().getChunk().toString();
-           logger.info("{}",info);*/
        }
 
        else if (message instanceof String) {
@@ -185,13 +219,18 @@ public class LoggingReceiver implements Receiver, Serializable {
            else if("Delete".equals(message)) {
                this.setState(STATES.DELETE);
            }
+           else if("File".equals(message)) {
+               this.setState(STATES.FILE);
+           }
            else if("Default".equals(message)) {
                this.setState(STATES.DEFAULT);
            }
        }
+
+
     }
 
-    public void listFiles() {
+    /*public void listFiles() {
         if (!files.isEmpty()) {
 
             files.forEach((key, value) -> logger.info("{} : {}",key, value));
@@ -199,7 +238,7 @@ public class LoggingReceiver implements Receiver, Serializable {
         else {
             logger.warn("No files to list.");
         }
-    }
+    }*/
 
     // Returns the number of connected nodes in the cluster
     public int clusterSize() {

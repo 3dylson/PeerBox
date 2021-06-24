@@ -12,11 +12,11 @@ import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 
 public class Main {
@@ -78,16 +78,30 @@ public class Main {
                         if (line.startsWith("quit") || line.startsWith("exit"))
                             break;
                         else if (line.startsWith("1")) {
+                            Scanner Int = new Scanner( System.in );
+                            System.out.print("> Name the file.\n");
+                            String filename = in.readLine();
+                            System.out.print("> Write the file content.\n");
+                            String content = in.readLine();
+                            byte[] buffer = content.getBytes();
+                            peerFile.setData(buffer);
+                            System.out.println("Wrote " + buffer.length + " bytes.\n");
+                            System.out.print("> Number of Replicas per chunks?\n");
+                            int replicas = Int.nextInt();
+                            peerFile.save(filename,replicas);
+
+                        }
+                        else if (line.startsWith("2")) {
                             logger.info("Listing files on peerBox: ");
                             receiver.listFiles();
                         }
-                        else if (line.startsWith("2")){
+                        else if (line.startsWith("3")){
                             System.out.print("> Enter the filename to fetch\n");
                             String filename = in.readLine();
                             PeerFileID id = new PeerFileID(null,filename,null,0);
                             peerFile.fetch(id);
                         }
-                        else if (line.startsWith("3")) {
+                        else if (line.startsWith("4")) {
                             System.out.print("> Enter the filename to delete\n");
                             String filename = in.readLine();
                             PeerFileID id = new PeerFileID(null,filename,null,0);
