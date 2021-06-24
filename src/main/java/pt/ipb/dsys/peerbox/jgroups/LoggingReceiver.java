@@ -28,7 +28,6 @@ public class LoggingReceiver implements Receiver, Serializable {
 
     List<byte[]> tmpchunks = new ArrayList<>();;
 
-
     public enum STATES {
         DEFAULT, SAVE, FETCH, DELETE, FILE
     }
@@ -109,11 +108,11 @@ public class LoggingReceiver implements Receiver, Serializable {
     @Override
     public void receive(Message msg) {
        Object message = msg.getObject();
-       String line = "Message received from: "
+       /*String line = "Message received from: "
                 + msg.getSrc()
                 + " to: " + msg.getDest()
                 + " -> " + message;
-        logger.info(line);
+        logger.info(line);*/
        if(message instanceof PeerFileID) {
 
            if (state == STATES.SAVE){
@@ -150,10 +149,11 @@ public class LoggingReceiver implements Receiver, Serializable {
                    byte[] fileBytes = new byte[0];
                    File temp = new File(peerBox+((PeerFileID) message).getFileName());
                    for (int i = 1; i <= fetchTotal; i++) {
+                       int index = i-1;
                        if(i == 1){
-                           fileBytes=tmpchunks.get(i);
+                           fileBytes=tmpchunks.get(index);
                        }else{
-                           fileBytes = Bytes.concat(fileBytes, tmpchunks.get(i));
+                           fileBytes = Bytes.concat(fileBytes, tmpchunks.get(index));
                        }
                    }
                    fileBytes= PeerUtil.trimBytes(fileBytes);
@@ -231,15 +231,9 @@ public class LoggingReceiver implements Receiver, Serializable {
 
     }
 
-    /*public void listFiles() {
-        if (!files.isEmpty()) {
-
-            files.forEach((key, value) -> logger.info("{} : {}",key, value));
-        }
-        else {
-            logger.warn("No files to list.");
-        }
-    }*/
+    public void listChunks() {
+        chunks.forEach((key, value) -> logger.info("{} : {}",key,value));
+    }
 
     // Returns the number of connected nodes in the cluster
     public int clusterSize() {
