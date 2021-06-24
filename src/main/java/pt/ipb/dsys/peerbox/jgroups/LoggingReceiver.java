@@ -26,7 +26,7 @@ public class LoggingReceiver implements Receiver, Serializable {
     Map<String, Integer> totalChunkfile = new ConcurrentHashMap<>();
     Map<UUID, byte[]> chunks = new ConcurrentHashMap<>();
 
-    List<byte[]> tmpchunks;
+    List<byte[]> tmpchunks = new ArrayList<>();;
 
 
     public enum STATES {
@@ -172,7 +172,7 @@ public class LoggingReceiver implements Receiver, Serializable {
                        ie.printStackTrace();
                    } finally {
                        logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
-                       logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
+                       logger.info("Fetch {} again to show metadata...",peerBox+((PeerFileID) message).getFileName());
                        setState(STATES.DEFAULT);
                    }
 
@@ -192,6 +192,7 @@ public class LoggingReceiver implements Receiver, Serializable {
                if (chunkBytes != null) {
                    logger.info("-- deleting all chunks of the file: {}",((PeerFileID) message).getFileName());
                    chunks.remove(((PeerFileID) message).getId());
+                   totalChunkfile.remove(((PeerFileID) message).getFileName());
 
                }
                else {

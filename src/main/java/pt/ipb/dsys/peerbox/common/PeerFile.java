@@ -70,11 +70,11 @@ public class PeerFile implements PeerBox, Serializable {
         this.data = data;
     }
 
-    public Map<PeerFileID, File> getPeerFiles() {
+    public Map<String, File> getPeerFiles() {
         return peerFiles;
     }
 
-    public void setPeerFiles(Map<PeerFileID, File> peerFiles) {
+    public void setPeerFiles(Map<String, File> peerFiles) {
         this.peerFiles = peerFiles;
     }
 
@@ -118,10 +118,30 @@ public class PeerFile implements PeerBox, Serializable {
 
         Random random = new Random();
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
+        File newFile = new File(peerBox+path);
 
         if(receivers.size()<1){
-            logger.warn("There's no receivers!");
+            logger.warn("There's no receivers! Saving File without replicas...");
+            try {
+                FileOutputStream outputStream = new FileOutputStream(peerBox+path);
+                outputStream.write(data);
+                outputStream.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            peerFiles.put(path,newFile);
+            chunksTotal.put(newFile,totalChunks);
+            logger.info("File: {}, saved with 0 replicas of 0 chunk(s).",path);
+
         }
+
+        else if (newFile.exists()){
+            peerFiles.put(path,newFile);
+        }
+
+        else {
 
         int blockSize = BLOCK_SIZE;
         int blockCount = (data.length + blockSize - 1) / blockSize;
@@ -196,12 +216,13 @@ public class PeerFile implements PeerBox, Serializable {
             e.printStackTrace();
         }
 
-        File newFile = new File(peerBox+path);
         peerFiles.put(path,newFile);
         chunksTotal.put(newFile,totalChunks);
         logger.info("File: {}, saved with {} replicas of {} chunk(s).",path,replicas,getTotalChunks());
+        }
 
-        return filePathId;
+
+        return getFileId();
     }
 
     /**
@@ -232,7 +253,24 @@ public class PeerFile implements PeerBox, Serializable {
         }
         else{
 
-            logger.info("File fetched: {}", out);
+            String line = null;
+
+            try {
+                // FileReader reads text files in the default encoding.
+                FileReader fileReader = new FileReader(peerFile);
+
+                // Always wrap FileReader in BufferedReader.
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+                while((line = bufferedReader.readLine()) != null) {
+                    System.out.println(line);
+                }
+
+                // Always close files.
+                bufferedReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
         }
 
@@ -249,7 +287,8 @@ public class PeerFile implements PeerBox, Serializable {
     public void delete(PeerFileID id) throws Exception {
 
         String path = id.fileName;
-        Integer fileChunks = receiver.getFiles().remove(path);
+        File peerFile = peerFiles.get(path);
+        int fileChunks = chunksTotal.get(peerFile);
 
         channel.send(new ObjectMessage(null,"Delete"));
         Sleeper.sleep(3000);
@@ -269,7 +308,8 @@ public class PeerFile implements PeerBox, Serializable {
             logger.warn("Chunks not found");
             return;
         }
-        for (int i = 1; i <= fileChunks.size(); i++) {
+        //TODO Resolve chunk list problem!
+        for (int i = 1; i <= fileChunks; i++) {
             PeerFileID fileID = new PeerFileID(fileChunks.get(i),path,null,i);
             try {
                 channel.send(new ObjectMessage(null,fileID));
@@ -280,13 +320,13 @@ public class PeerFile implements PeerBox, Serializable {
     }
 
 
-    public void listFiles() {
+    /*public void listFiles() {
         if (!peerFiles.isEmpty()) {
             peerFiles.forEach((key, value) -> logger.info("{} : {}",key,value));
         }
         else{
             logger.warn("No files to list.");
-        }
+        }*/
 
     }
 }

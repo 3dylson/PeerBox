@@ -93,7 +93,7 @@ public class Main {
                         }
                         else if (line.startsWith("2")) {
                             logger.info("Listing files on peerBox: ");
-                            receiver.listFiles();
+                            //receiver.listFiles();
                         }
                         else if (line.startsWith("3")){
                             System.out.print("> Enter the filename to fetch\n");
@@ -118,7 +118,7 @@ public class Main {
                     try{
                         if(!peerFile.getPeerFiles().isEmpty()){
                             logger.info("-- ({}) have this files chunks: ",hostname);
-                            peerFile.listFiles();
+                            //peerFile.listFiles();
                             Sleeper.sleep(50000);
                         }
                         Sleeper.sleep(20000);
