@@ -12,11 +12,13 @@ import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 
 
 public class Main {
@@ -67,9 +69,10 @@ public class Main {
                         //File[] f = dir.listFiles();
                         System.out.print("""
                                 > Welcome to the PeerBox! :)
-                                [1] List all files
-                                [2] Fetch a file
-                                [3] Delete a file
+                                [1] Create a File
+                                [2] List all files
+                                [3] Fetch a file
+                                [4] Delete a file
                                 Or "exit" to leave.
                                 """);
                         System.out.flush();
@@ -89,17 +92,25 @@ public class Main {
                             System.out.print("> Number of Replicas per chunks?\n");
                             int replicas = Int.nextInt();
                             peerFile.save(filename,replicas);
-
                         }
                         else if (line.startsWith("2")) {
-                            logger.info("Listing files on peerBox: ");
                             //receiver.listFiles();
+                            if(peerFile.getPeerFiles().isEmpty()) {
+                                logger.info("No file to list...");
+                            }
+                            else{
+                                logger.info("Listing files on peerBox: ");
+                                Arrays.stream(peerFile.readDirectory(peerBox)).sorted().forEach(System.out::println);
+                                System.out.print("\n");
+                            }
+
                         }
                         else if (line.startsWith("3")){
                             System.out.print("> Enter the filename to fetch\n");
                             String filename = in.readLine();
                             PeerFileID id = new PeerFileID(null,filename,null,0);
                             peerFile.fetch(id);
+                            System.out.print("\n");
                         }
                         else if (line.startsWith("4")) {
                             System.out.print("> Enter the filename to delete\n");
@@ -116,9 +127,9 @@ public class Main {
             } else {
                 while (true) {
                     try{
-                        if(!peerFile.getPeerFiles().isEmpty()){
+                        if(!receiver.getChunks().isEmpty()){
                             logger.info("-- ({}) have this files chunks: ",hostname);
-                            //peerFile.listFiles();
+                            receiver.listChunks();
                             Sleeper.sleep(50000);
                         }
                         Sleeper.sleep(20000);
