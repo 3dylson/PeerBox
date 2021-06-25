@@ -10,13 +10,8 @@ import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
 import static pt.ipb.dsys.peerbox.Main.peerBox;
@@ -33,14 +28,6 @@ public class PeerFile implements PeerBox, Serializable {
     private int totalChunks = 0;
 
     private long timestamp = 0;
-    private JFrame frame;
-    private JLabel membersLabel;
-    private JLabel stateLabel;
-    private JLabel filesLabel;
-    private JLabel chuksLabel;
-    private JLabel timestampLabel;
-    private JProgressBar fetchProgressBar;
-    private JButton fetchButton;
 
     Map<String, File> peerFiles = new ConcurrentHashMap<>();
     Map<File, Integer> chunksTotal = new ConcurrentHashMap<>();
@@ -48,6 +35,7 @@ public class PeerFile implements PeerBox, Serializable {
 
     JChannel channel;
     LoggingReceiver receiver;
+    //GUI userInterface;
 
     public PeerFile(JChannel channel, LoggingReceiver receiver) throws Exception {
         this.channel = channel;
@@ -56,6 +44,7 @@ public class PeerFile implements PeerBox, Serializable {
         this.receiver.setChannel(channel);
         this.channel.setReceiver(this.receiver);
         this.channel.connect(CLUSTER_NAME);
+        new GUI();
 
     }
 

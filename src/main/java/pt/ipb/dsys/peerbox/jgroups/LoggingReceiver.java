@@ -144,6 +144,7 @@ public class LoggingReceiver implements Receiver, Serializable {
                tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
                int fetchTotal = totalChunkfile.get(((PeerFileID) message).getFileName());
 
+
                if (((PeerFileID) message).getChunkNumber() == fetchTotal) {
 
                    byte[] fileBytes = new byte[0];

@@ -3,6 +3,7 @@ package pt.ipb.dsys.peerbox;
 import org.jgroups.JChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.ipb.dsys.peerbox.common.GUI;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
@@ -35,6 +36,7 @@ public class Main {
         PeerUtil.localhostFix(gossipHostname);
         boolean isNode = args.length > 0 && args[0].equals("node");
         new Main().initializeCluster(isNode);
+
 
     }
 
