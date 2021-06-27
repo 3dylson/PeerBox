@@ -35,7 +35,7 @@ public class PeerFile implements PeerBox, Serializable {
 
     JChannel channel;
     LoggingReceiver receiver;
-    //GUI userInterface;
+
 
     public PeerFile(JChannel channel, LoggingReceiver receiver) throws Exception {
         this.channel = channel;
@@ -44,8 +44,6 @@ public class PeerFile implements PeerBox, Serializable {
         this.receiver.setChannel(channel);
         this.channel.setReceiver(this.receiver);
         this.channel.connect(CLUSTER_NAME);
-        new GUI();
-
     }
 
     public PeerFile(PeerFileID fileId, int totalChunks) {
