@@ -1,5 +1,6 @@
 package pt.ipb.dsys.peerboxui;
 
+import javafx.application.Application;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -7,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class PeerboxUiApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PeerboxUiApplication.class, args);
+        Application.launch(PeerBoxApp.class, args);
     }
 
 }
