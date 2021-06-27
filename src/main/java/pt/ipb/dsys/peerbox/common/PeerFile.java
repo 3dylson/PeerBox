@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
 import static pt.ipb.dsys.peerbox.Main.peerBox;
 
-public class PeerFile implements PeerBox, Serializable {
+public class PeerFile extends JFrame implements PeerBox, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(PeerFile.class);
     public static final long serialVersionUID = 1L;
@@ -35,7 +35,9 @@ public class PeerFile implements PeerBox, Serializable {
 
     JChannel channel;
     LoggingReceiver receiver;
-    //GUI userInterface;
+
+    private File[] files;
+    private File currentDir;
 
     public PeerFile(JChannel channel, LoggingReceiver receiver) throws Exception {
         this.channel = channel;
@@ -44,7 +46,6 @@ public class PeerFile implements PeerBox, Serializable {
         this.receiver.setChannel(channel);
         this.channel.setReceiver(this.receiver);
         this.channel.connect(CLUSTER_NAME);
-        new GUI();
 
     }
 
