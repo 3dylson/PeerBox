@@ -27,7 +27,7 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     public static final String gossipHostname = "gossip-router";
-    public static final String peerBox = ("peerBox/");
+    public static final String peerBox = ("boxFiles/");
 
 
     public static void main(String[] args) {

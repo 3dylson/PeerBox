@@ -1,2 +1,9 @@
+pluginManagement {
+    plugins {
+        id "org.jetbrains.gradle.plugin.idea-ext" version "1.0"
+    }
+}
+
 rootProject.name = 'ds-assignment'
+include 'peerbox'
 
