@@ -10,6 +10,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class PeerBoxApp extends Application {
     private ConfigurableApplicationContext appContext;
 
+
     @Override
     public void init() {
         appContext = new SpringApplicationBuilder(PeerboxUiApplication.class).run();
@@ -18,6 +19,7 @@ public class PeerBoxApp extends Application {
     @Override
     public void start(Stage stage) {
         appContext.publishEvent(new StageReadyEvent(stage));
+
     }
 
     @Override

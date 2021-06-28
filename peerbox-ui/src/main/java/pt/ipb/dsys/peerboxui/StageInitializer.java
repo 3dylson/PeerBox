@@ -11,6 +11,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import pt.ipb.dsys.peerboxui.PeerBoxApp.StageReadyEvent;
 
+import java.awt.*;
 import java.io.IOException;
 
 @Component
@@ -33,7 +34,7 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
             Parent parent = fxmlLoader.load();
 
             Stage stage = event.getStage();
-            stage.setScene(new Scene(parent,800,600));
+            stage.setScene(new Scene(parent,600,400));
             stage.setTitle(appTitle);
             stage.show();
         } catch (IOException e) {
