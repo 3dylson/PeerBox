@@ -6,13 +6,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
-group = 'pt.ipb.dsys'
-version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
-
-repositories {
-    mavenCentral()
-}
 
 javafx {
     version = "15.0.1"
@@ -21,6 +15,7 @@ javafx {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
+    compile project('peerbox')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 }

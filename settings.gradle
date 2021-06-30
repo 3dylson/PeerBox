@@ -6,4 +6,5 @@ pluginManagement {
 
 rootProject.name = 'ds-assignment'
 include 'peerbox'
+include 'peerbox-ui'
 
