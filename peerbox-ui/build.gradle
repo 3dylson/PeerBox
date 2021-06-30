@@ -6,12 +6,12 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
-group = 'pt.ipb.dsys'
-version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
-repositories {
-    mavenCentral()
+jar {
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 javafx {
@@ -21,10 +21,8 @@ javafx {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'com.google.guava:guava:30.1.1-jre'
+    //compile project('peerbox')
 
 }
 
-test {
-    useJUnitPlatform()
-}
