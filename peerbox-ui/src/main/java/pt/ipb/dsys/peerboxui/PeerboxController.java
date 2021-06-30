@@ -22,7 +22,4 @@ public class PeerboxController {
     public Spinner defaultReplicasButton;
     @FXML
     public ProgressIndicator progressIndicator;
-
-    //private PeerFile peerFile;
-
 }

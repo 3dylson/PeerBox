@@ -11,14 +11,15 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import pt.ipb.dsys.peerboxui.PeerBoxApp.StageReadyEvent;
 
+import java.awt.*;
 import java.io.IOException;
 
 @Component
 public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     @Value("classpath:/peerbox.fxml")
     private Resource peerboxResource;
-    private final String appTitle;
-    private final ApplicationContext appContext;
+    private String appTitle;
+    private ApplicationContext appContext;
 
     public StageInitializer(@Value("${spring.application.ui.title}") String appTitle, ApplicationContext appContext) {
         this.appTitle = appTitle;
@@ -29,7 +30,7 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     public void onApplicationEvent(StageReadyEvent event) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(peerboxResource.getURL());
-            fxmlLoader.setControllerFactory(appContext::getBean);
+            fxmlLoader.setControllerFactory(param -> appContext.getBean(param));
             Parent parent = fxmlLoader.load();
 
             Stage stage = event.getStage();
