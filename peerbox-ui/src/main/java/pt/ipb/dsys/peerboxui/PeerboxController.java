@@ -6,6 +6,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Spinner;
 import org.springframework.stereotype.Component;
+import pt.ipb.dsys.peerbox.common.PeerFile;
 
 @Component
 public class PeerboxController {
@@ -22,4 +23,6 @@ public class PeerboxController {
     public Spinner defaultReplicasButton;
     @FXML
     public ProgressIndicator progressIndicator;
+
+    private PeerFile peerFile;
 }

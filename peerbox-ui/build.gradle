@@ -6,7 +6,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
-sourceCompatibility = '11'
+//sourceCompatibility = '11'
 
 jar {
     from {
@@ -22,7 +22,7 @@ javafx {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'com.google.guava:guava:30.1.1-jre'
-    //compile project('peerbox')
+    implementation project(':peerbox')
 
 }
 
