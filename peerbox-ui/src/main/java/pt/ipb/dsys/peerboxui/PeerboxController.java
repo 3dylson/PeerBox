@@ -25,4 +25,8 @@ public class PeerboxController {
     public ProgressIndicator progressIndicator;
 
     private PeerFile peerFile;
+
+    /*public PeerboxController(PeerFile peerFile) {
+        this.peerFile = peerFile;
+    }*/
 }
