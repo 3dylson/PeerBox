@@ -333,12 +333,12 @@ public class PeerFile implements PeerBox, Serializable {
         chunksTotal.put(newFile,totalChunks);
     }
 
-    public File[] readDirectory(String directoryName) throws PeerBoxException {
+    public File[] readDirectory() throws PeerBoxException {
         File file = null;
         File[] fileList = null;
 
         try {
-            file = new File(directoryName);
+            file = new File(peerBox);
             fileList = file.listFiles();
         }
         catch(Exception e) {

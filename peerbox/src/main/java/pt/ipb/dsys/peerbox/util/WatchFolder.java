@@ -43,6 +43,7 @@ public class WatchFolder {
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
 
                     // Get file name from even context
+                    @SuppressWarnings("unchecked")
                     WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
 
                     Path fileName = pathEvent.context();

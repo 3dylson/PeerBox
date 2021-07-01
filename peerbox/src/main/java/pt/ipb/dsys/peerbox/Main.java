@@ -101,7 +101,7 @@ public class Main {
                             }
                             else{
                                 logger.info("Listing files on peerBox: ");
-                                Arrays.stream(peerFile.readDirectory(peerBox)).sorted().forEach(System.out::println);
+                                Arrays.stream(peerFile.readDirectory()).sorted().forEach(System.out::println);
                                 System.out.print("\n");
                             }
 
