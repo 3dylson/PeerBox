@@ -26,7 +26,7 @@ public class PeerboxController {
 
     private PeerFile peerFile;
 
-    /*public PeerboxController(PeerFile peerFile) {
+    public PeerboxController(PeerFile peerFile) {
         this.peerFile = peerFile;
-    }*/
+    }
 }
