@@ -36,7 +36,7 @@ public class Main  extends Application {
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/gui.fxml")));
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
+        //scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
 
         primaryStage.setTitle(CLUSTER_NAME);
         primaryStage.setScene(scene);
