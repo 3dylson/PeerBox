@@ -8,22 +8,15 @@ import javafx.stage.Stage;
 import org.jgroups.JChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
-import pt.ipb.dsys.peerbox.common.PeerFileID;
 import pt.ipb.dsys.peerbox.jgroups.DefaultProtocols;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.PeerUtil;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,8 +34,12 @@ public class Main  extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/gui.fxml")));
+
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
+
         primaryStage.setTitle(CLUSTER_NAME);
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 
