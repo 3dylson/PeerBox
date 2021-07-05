@@ -11,7 +11,6 @@ import static pt.ipb.dsys.peerbox.Main.peerBox;
 
 public class WatchFolder {
 
-    private final int defaultReplicas = 2;
     PeerFile pf;
 
     public WatchFolder(PeerFile pf) {
@@ -43,6 +42,7 @@ public class WatchFolder {
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
 
                     // Get file name from even context
+                    @SuppressWarnings("unchecked")
                     WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
 
                     Path fileName = pathEvent.context();
@@ -57,7 +57,8 @@ public class WatchFolder {
                         System.out.println("A new file is created : " + fileName);
                         Path path = Paths.get(peerBox+fileName);
                         pf.setData(Files.readAllBytes(path));
-                        pf.save(fileName.toString(),defaultReplicas);
+                        int defaultReplicas = 2;
+                        pf.save(fileName.toString(), defaultReplicas);
 
                     }
 
