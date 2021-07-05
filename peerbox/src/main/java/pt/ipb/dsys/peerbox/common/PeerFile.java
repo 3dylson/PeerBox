@@ -125,11 +125,11 @@ public class PeerFile implements PeerBox, Serializable {
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
         File newFile = new File(peerBox+path);
 
-        if(receivers.size()<1){
+        if(receivers.size()<2){
             logger.warn("There's no receivers! Saving File without replicas...");
             createFileWithData(path, newFile);
             logger.info("File: {}, saved with 0 replicas of 0 chunk(s).",path);
-
+            return null;
         }
 
 

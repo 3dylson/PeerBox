@@ -1,13 +1,9 @@
 package pt.ipb.dsys.peerboxui;
 
-import com.sun.javafx.binding.BidirectionalBinding;
-import javafx.beans.property.IntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import org.springframework.stereotype.Component;
@@ -19,10 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-
-import static pt.ipb.dsys.peerbox.Main.peerBox;
 
 @Component
 public class PeerboxController  {
@@ -54,7 +46,6 @@ public class PeerboxController  {
         Arrays.stream(listFiles).iterator().forEachRemaining(file -> files.add(file.getName()));
         peerBoxFiles.setItems(files);
 
-        //defaultReplicasButton = new Spinner<>(1, 20, 2);
         SpinnerValueFactory<Integer> valueFactory = defaultReplicasButton.getValueFactory();
         defaultReplicasButton.setOnScroll(event -> {
             if( defaultReplicasButton.isDisabled()) {
@@ -73,13 +64,11 @@ public class PeerboxController  {
         defaultReplicasButton.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1,20,2));
         //BidirectionalBinding.bindNumber(,valueFactory.valueProperty());
         //defaultReplicasButton.setEditable(true);
-        //Spinner spinner = new Spinner(0, 10, 5);
-        //defaultReplicasButton.setValueFactory(new Spinn);
 
         peerBoxFiles.setOnDragOver(event -> {
             if (event.getGestureSource() != peerBoxFiles
                     && event.getDragboard().hasFiles()) {
-                /* allow for both copying and moving. */
+                /* allow for copying. */
                 event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
