@@ -1,5 +1,7 @@
 package pt.ipb.dsys.peerbox;
 
+import javafx.application.Application;
+import javafx.stage.Stage;
 import org.jgroups.JChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +23,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class Main {
+public class Main  extends Application {
 
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final String CLUSTER_NAME = "PeerBox";
     public static final String gossipHostname = "gossip-router";
     public static final String peerBox = ("peerBox/");
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+
+    }
 
 
     public static void main(String[] args) {
@@ -143,4 +150,5 @@ public class Main {
             logger.error(e.getMessage(), e);
         }
     }
+
 }
