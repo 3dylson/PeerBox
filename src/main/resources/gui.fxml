@@ -18,5 +18,11 @@
       <Label layoutX="14.0" layoutY="326.0" text="Replicas per Chunk" />
       <Button fx:id="fetchBttn" layoutX="266.0" layoutY="280.0" mnemonicParsing="false" text="Fetch FILE" />
       <Button layoutX="263.0" layoutY="322.0" mnemonicParsing="false" text="Delete FILE" />
+      <Text layoutX="14.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Hint:">
+         <font>
+            <Font name="System Bold Italic" size="12.0" />
+         </font>
+      </Text>
+      <Text layoutX="42.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text=" Drag and drop files in peerbox to save it with replicas per chunk" />
    </children>
 </AnchorPane>

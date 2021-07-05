@@ -30,13 +30,19 @@ public class Main  extends Application {
     public static final String CLUSTER_NAME = "PeerBox";
     public static final String gossipHostname = "gossip-router";
     public static final String peerBox = ("peerBox/");
+    private FXMLLoader fxmlLoader;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/gui.fxml")));
+        //Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/gui.fxml")));
+
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/gui.fxml"));
+        Parent root = loader.load();
 
         Scene scene = new Scene(root);
         //scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
+        fxmlLoader = loader;
 
         primaryStage.setTitle(CLUSTER_NAME);
         primaryStage.setScene(scene);
@@ -69,6 +75,10 @@ public class Main  extends Application {
             Sleeper.sleep(5000);
 
             PeerFile peerFile = new PeerFile(channel, receiver);
+
+            Controller controller = fxmlLoader.getController();
+            controller.setPeerFile(peerFile);
+
             executor.submit(new WatchCallable(peerFile));
             String hostname = DnsHelper.getHostName();
 
@@ -76,6 +86,7 @@ public class Main  extends Application {
             if (!dir.exists()) {
                 dir.mkdir();
             }
+
 
             while (true){
                 launch(args);
