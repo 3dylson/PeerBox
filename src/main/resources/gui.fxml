@@ -11,5 +11,12 @@
             <Font name="System Bold" size="12.0" />
          </font>
       </Label>
+      <ListView fx:id="hostFiles" layoutX="14.0" layoutY="51.0" prefHeight="254.0" prefWidth="200.0" />
+      <Label id="label" layoutX="390.0" layoutY="34.0" text="Cluster Files" />
+      <ListView fx:id="clusterFiles" layoutX="386.0" layoutY="51.0" prefHeight="254.0" prefWidth="200.0" />
+      <Spinner fx:id="replicas" layoutX="14.0" layoutY="343.0" />
+      <Label layoutX="14.0" layoutY="326.0" text="Replicas per Chunk" />
+      <Button fx:id="fetchBttn" layoutX="266.0" layoutY="280.0" mnemonicParsing="false" text="Fetch FILE" />
+      <Button layoutX="263.0" layoutY="322.0" mnemonicParsing="false" text="Delete FILE" />
    </children>
 </AnchorPane>
