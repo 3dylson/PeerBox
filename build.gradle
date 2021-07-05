@@ -21,14 +21,16 @@ jar {
     }
 }
 
-javafx {
-    version = "15.0.1"
-    modules = [ 'javafx.controls', 'javafx.fxml']
-}
-
-
 dependencies {
     implementation 'org.jgroups:jgroups:5.1.6.Final'
     implementation 'com.google.guava:guava:30.1.1-jre'
     implementation 'ch.qos.logback:logback-classic:1.2.3'
 }
+
+javafx {
+    version = "15.0.1"
+    modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+mainClassName = 'pt.ipb.dsys.peerbox.Main'
+
