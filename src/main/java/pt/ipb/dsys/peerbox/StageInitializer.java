@@ -20,6 +20,10 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     private String appTitle;
     private ApplicationContext appContext;
 
+    public ApplicationContext getAppContext() {
+        return appContext;
+    }
+
     public StageInitializer(@Value("${spring.application.ui.title}") String appTitle, ApplicationContext appContext) {
         this.appTitle = appTitle;
         this.appContext = appContext;
