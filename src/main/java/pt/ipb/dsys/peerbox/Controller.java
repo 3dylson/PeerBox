@@ -15,12 +15,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
+import pt.ipb.dsys.peerbox.common.PeerFileID;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class Controller {
@@ -47,11 +49,13 @@ public class Controller {
 
     @FXML
     public void initialize() throws PeerBoxException {
-
+        AtomicReference<String> selectedFile = new AtomicReference<>(null);
         ObservableList<String> files = FXCollections.observableArrayList();
+        ObservableList<String> remoteFiles = FXCollections.observableArrayList();
         File[] listFiles = peerFile.readDirectory();
         Arrays.stream(listFiles).iterator().forEachRemaining(file -> files.add(file.getName()));
         hostFiles.setItems(files);
+        clusterFiles.setItems(remoteFiles);
 
         SpinnerValueFactory<Integer> valueFactory = replicas.getValueFactory();
         replicas.setOnScroll(event -> {
@@ -94,12 +98,27 @@ public class Controller {
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
+                    if(peerFile.getReceiver().clusterSize() > 1){
+                        remoteFiles.add(file.getName());
+                    }
                     files.add(file.getName());
                     success = true;
                 }
             }
             event.setDropCompleted(success);
         });
+
+        hostFiles.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            selectedFile.set(newValue);
+        });
+
+        fetchBttn.setOnAction((event -> {
+            try {
+                peerFile.fetch(new PeerFileID(null,selectedFile.get(),null,0));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
 
     }
 

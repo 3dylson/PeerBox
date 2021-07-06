@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
+import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static pt.ipb.dsys.peerbox.Main.CLUSTER_NAME;
@@ -122,17 +124,14 @@ public class PeerFile implements PeerBox, Serializable {
 
         Random random = new Random();
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
-        File newFile = new File(peerBox+path);
+        File newFile = new File(peerBox + path);
 
-        if(receivers.size()<2){
+        if (receivers.size() < 2) {
             logger.warn("There's no receivers! Saving File without replicas...");
             createFileWithData(path, newFile);
-            logger.info("File: {}, saved with 0 replicas of 0 chunk(s).",path);
+            logger.info("File: {}, saved with 0 replicas of 0 chunk(s).", path);
             return null;
-        }
-
-
-        else {
+        } else {
 
             List<UUID> chunksList = new ArrayList<UUID>();
 
@@ -160,9 +159,9 @@ public class PeerFile implements PeerBox, Serializable {
 
                         int receive = random.nextInt(receivers.size());
                         Address destination = channel.getView().getMembers().get(receive);
-                        channel.send(new ObjectMessage(destination,"Save"));
+                        channel.send(new ObjectMessage(destination, "Save"));
                         Sleeper.sleep(3000);
-                        channel.send(new ObjectMessage(destination,new PeerFileID(chunkId,path,chunk,j)));
+                        channel.send(new ObjectMessage(destination, new PeerFileID(chunkId, path, chunk, j)));
 
                     }
                 }
@@ -187,25 +186,25 @@ public class PeerFile implements PeerBox, Serializable {
 
                     int receive = random.nextInt(receivers.size());
                     Address destination = channel.getView().getMembers().get(receive);
-                    channel.send(new ObjectMessage(destination,"Save"));
+                    channel.send(new ObjectMessage(destination, "Save"));
                     Sleeper.sleep(3000);
-                    channel.send(new ObjectMessage(destination,new PeerFileID(chunkId,path,chunk,j)));
+                    channel.send(new ObjectMessage(destination, new PeerFileID(chunkId, path, chunk, j)));
                     //setFileId(fileID);
                 }
             }
 
-            fileChunks.put(path,chunksList);
+            fileChunks.put(path, chunksList);
             setTotalChunks(totalChunk);
-            PeerFileID filePathId = new PeerFileID(null,path,null,0);
+            PeerFileID filePathId = new PeerFileID(null, path, null, 0);
             setFileId(filePathId);
 
-            channel.send(new ObjectMessage(null,new PeerFile(filePathId,totalChunk)));
+            channel.send(new ObjectMessage(null, new PeerFile(filePathId, totalChunk)));
 
             Sleeper.sleep(3000);
-            channel.send(new ObjectMessage(null,"Default"));
+            channel.send(new ObjectMessage(null, "Default"));
 
             createFileWithData(path, newFile);
-            logger.info("File: {}, saved with {} replicas of {} chunk(s).",path,replicas,getTotalChunks());
+            logger.info("File: {}, saved with {} replicas of {} chunk(s).", path, replicas, getTotalChunks());
         }
 
 
@@ -229,45 +228,53 @@ public class PeerFile implements PeerBox, Serializable {
         String path = id.fileName;
         File peerFile = peerFiles.get(path);
 
-        if (peerFile == null){
+        if (peerFile == null) {
             logger.info("File not found! Requesting chunks to other peers ...");
             List<UUID> chunks = fileChunks.get(path);
 
-            channel.send(new ObjectMessage(null,"Fetch"));
+            channel.send(new ObjectMessage(null, "Fetch"));
             Sleeper.sleep(3000);
 
-            if(chunks == null) {
+            if (chunks == null) {
                 logger.warn("Chunks not found");
                 //return;
-            }
-            else{
-                try{
+            } else {
+                try {
 
                     for (int i = 1; i <= chunks.size(); i++) {
-                        int index = i-1;
-                        PeerFileID fileID = new PeerFileID(chunks.get(index),path,null,i);
-                        channel.send(new ObjectMessage(null,fileID));
+                        int index = i - 1;
+                        PeerFileID fileID = new PeerFileID(chunks.get(index), path, null, i);
+                        channel.send(new ObjectMessage(null, fileID));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
             }
-        }
-        else{
+        } else {
 
-            logger.info("Content of the file {} :",path);
-            String line = null;
+            logger.info("Opening the file {} :", path);
+            String line;
 
             try {
-                // FileReader reads text files in the default encoding.
-                FileReader fileReader = new FileReader(peerFile);
-                // Always wrap FileReader in BufferedReader.
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                while((line = bufferedReader.readLine()) != null) {
-                    System.out.println(line);
+
+                if (!Desktop.isDesktopSupported()) {
+                    logger.warn("Desktop is not supported, showing file content on terminal:");
+                    // FileReader reads text files in the default encoding.
+                    FileReader fileReader = new FileReader(peerFile);
+                    // Always wrap FileReader in BufferedReader.
+                    BufferedReader bufferedReader = new BufferedReader(fileReader);
+                    while ((line = bufferedReader.readLine()) != null) {
+                        System.out.println(line);
+                    }
+                    bufferedReader.close();
+                    return null;
                 }
-                bufferedReader.close();
+                Desktop desktop = Desktop.getDesktop();
+
+                if (peerFile.exists()) {
+                    desktop.open(peerFile);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -290,32 +297,31 @@ public class PeerFile implements PeerBox, Serializable {
         List<UUID> removedChunks = fileChunks.remove(path);
         File peerFile = peerFiles.get(path);
         int fileChunks = chunksTotal.get(peerFile);
-        channel.send(new ObjectMessage(null,"Delete"));
+        channel.send(new ObjectMessage(null, "Delete"));
         Sleeper.sleep(3000);
-        if(removedChunks == null) {
+        if (removedChunks == null) {
             logger.warn("Chunks not found");
             //return;
-        }
-        else{
+        } else {
             for (int i = 1; i <= removedChunks.size(); i++) {
-                int index = i-1;
-                PeerFileID fileID = new PeerFileID(removedChunks.get(index),path,null,i);
-                channel.send(new ObjectMessage(null,fileID));
+                int index = i - 1;
+                PeerFileID fileID = new PeerFileID(removedChunks.get(index), path, null, i);
+                channel.send(new ObjectMessage(null, fileID));
             }
 
         }
         Sleeper.sleep(3000);
-        File delFile = new File(peerBox+path);
-        if (delFile.exists()){
+        File delFile = new File(peerBox + path);
+        if (delFile.exists()) {
             delFile.delete();
         }
         peerFiles.remove(path);
-        channel.send(new ObjectMessage(null,"Default"));
+        channel.send(new ObjectMessage(null, "Default"));
     }
 
 
     private void createFileWithData(String path, File newFile) {
-        if (!newFile.exists()){
+        if (!newFile.exists()) {
             try {
                 FileOutputStream outputStream = new FileOutputStream(newFile);
                 outputStream.write(data);
@@ -328,8 +334,8 @@ public class PeerFile implements PeerBox, Serializable {
         }
 
 
-        peerFiles.put(path,newFile);
-        chunksTotal.put(newFile,totalChunks);
+        peerFiles.put(path, newFile);
+        chunksTotal.put(newFile, totalChunks);
     }
 
     public File[] readDirectory() throws PeerBoxException {
@@ -339,8 +345,7 @@ public class PeerFile implements PeerBox, Serializable {
         try {
             file = new File(peerBox);
             fileList = file.listFiles();
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
