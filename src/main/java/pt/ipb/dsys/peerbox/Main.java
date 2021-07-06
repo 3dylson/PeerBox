@@ -1,8 +1,10 @@
 package pt.ipb.dsys.peerbox;
 
+import javafx.application.Application;
 import org.jgroups.JChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
@@ -20,7 +22,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
+@SpringBootApplication
 public class Main {
 
 
@@ -31,11 +33,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-
-        PeerUtil.localhostFix(gossipHostname);
-        boolean isNode = args.length > 0 && args[0].equals("node");
-        new Main().initializeCluster(isNode);
-
+        Application.launch(PeerBoxApp.class, args);
 
     }
 
@@ -101,7 +99,7 @@ public class Main {
                             }
                             else{
                                 logger.info("Listing files on peerBox: ");
-                                Arrays.stream(peerFile.readDirectory(peerBox)).sorted().forEach(System.out::println);
+                                Arrays.stream(peerFile.readDirectory()).sorted().forEach(System.out::println);
                                 System.out.print("\n");
                             }
 
