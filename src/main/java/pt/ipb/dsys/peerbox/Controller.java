@@ -39,6 +39,8 @@ public class Controller {
     public Button fetchBttn;
     @FXML
     public Button deleteBttn;
+    @FXML
+    public Button deleteOneReplica;
 
     private final PeerFile peerFile;
 
@@ -49,6 +51,7 @@ public class Controller {
 
     @FXML
     public void initialize() throws PeerBoxException {
+        String hostname = DnsHelper.getHostName();
         AtomicReference<String> selectedFile = new AtomicReference<>(null);
         ObservableList<String> files = FXCollections.observableArrayList();
         ObservableList<String> remoteFiles = FXCollections.observableArrayList();
@@ -134,6 +137,12 @@ public class Controller {
             }finally {
                 files.remove(selectedFile.get());
             }
+        }));
+
+        deleteOneReplica.setOnAction((event -> {
+            peerFile.getPeerFiles().remove(selectedFile.get());
+            files.remove(selectedFile.get());
+            logger.info("File has been deleted only on this peer ({}) : {}",hostname,selectedFile.get());
         }));
 
     }

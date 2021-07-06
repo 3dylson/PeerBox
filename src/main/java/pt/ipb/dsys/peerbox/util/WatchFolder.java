@@ -63,9 +63,9 @@ public class WatchFolder {
 
                     if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
 
-                        String hostname = DnsHelper.getHostName();
+                        /*String hostname = DnsHelper.getHostName();
                         System.out.println("File has been deleted only on this peer (" + hostname + ") : "+fileName);
-                        pf.getPeerFiles().remove(fileName.toString());
+                        pf.getPeerFiles().remove(fileName.toString());*/
 
                     }
                     if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {

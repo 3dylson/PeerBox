@@ -2,9 +2,8 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<?import javafx.scene.text.Text?>
-<?import javafx.scene.text.Font?>
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pt.ipb.dsys.peerbox.Controller">
    <children>
       <Label layoutX="14.0" layoutY="31.0" text="Node Files:" />
@@ -14,12 +13,13 @@
       <Spinner fx:id="replicas" layoutX="14.0" layoutY="333.0" />
       <Label layoutX="14.0" layoutY="316.0" text="Replicas per chunk" />
       <Button fx:id="fetchBttn" layoutX="267.0" layoutY="273.0" mnemonicParsing="false" text="Fetch File" />
-      <Button fx:id="deleteBttn" layoutX="264.0" layoutY="312.0" mnemonicParsing="false" text="Delete File" />
+      <Button fx:id="deleteBttn" layoutX="448.0" layoutY="366.0" mnemonicParsing="false" text="Delete all copies of File" textFill="#c33e3e" />
       <Text layoutX="14.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Hint:">
          <font>
-            <Font name="System Bold Italic" size="12.0"/>
+            <Font name="System Bold Italic" size="12.0" />
          </font>
       </Text>
-      <Text layoutX="42.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text=" Drag and drop files in node panel to save it with replicas per chunk"/>
+      <Text layoutX="42.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text=" Drag and drop files in node panel to save it with replicas per chunk" />
+      <Button fx:id="deleteOneReplica" layoutX="226.0" layoutY="312.0" mnemonicParsing="false" text="Delete File on this Node" />
    </children>
 </AnchorPane>
