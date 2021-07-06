@@ -4,10 +4,8 @@ package pt.ipb.dsys.peerbox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import org.slf4j.Logger;
@@ -45,6 +43,12 @@ public class Controller {
     public Button deleteOneReplica;
     @FXML
     public Button openFileBttn;
+    @FXML
+    public TableView<File> dataTable;
+    @FXML
+    public TableColumn<File,String> modifiedDate;
+    @FXML
+    public TableColumn<File,String> fileBytes;
 
     private final PeerFile peerFile;
 
@@ -64,6 +68,8 @@ public class Controller {
         Arrays.stream(listFiles).iterator().forEachRemaining(file -> files.add(file.getName()));
         hostFiles.setItems(files);
         clusterFiles.setItems(remoteFiles);
+
+
 
         SpinnerValueFactory<Integer> valueFactory = replicas.getValueFactory();
         replicas.setOnScroll(event -> {

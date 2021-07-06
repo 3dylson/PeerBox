@@ -22,5 +22,11 @@
       <Text layoutX="42.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text=" Drag and drop files in node panel to save it with replicas per chunk" />
       <Button fx:id="deleteOneReplica" layoutX="226.0" layoutY="312.0" mnemonicParsing="false" text="Delete File on this Node" />
       <Button fx:id="openFileBttn" layoutX="265.0" layoutY="273.0" mnemonicParsing="false" text="Open File" />
+      <TableView fx:id="dataTable" layoutX="214.0" layoutY="48.0" prefHeight="200.0" prefWidth="173.0">
+        <columns>
+          <TableColumn fx:id="modifiedDate" prefWidth="87.0" text="Last Modified" />
+          <TableColumn fx:id="fileBytes" prefWidth="85.0" text="Data" />
+        </columns>
+      </TableView>
    </children>
 </AnchorPane>
