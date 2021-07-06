@@ -57,21 +57,18 @@ public class Controller {
     public void initialize() {
 
         // Cluster initialization and connection
-        try (JChannel channel = new JChannel(DefaultProtocols.gossipRouter(gossipHostname,12001))) {
+        try (JChannel channel = peerFile.getChannel()) {
 
             logger.info("Starting a background thread for watching folders.");
             //new Thread(new WatchFolder()).start();
             ExecutorService executor = Executors.newCachedThreadPool();
-            LoggingReceiver receiver = new LoggingReceiver(channel);
-            channel.setReceiver(receiver);
+            channel.setReceiver(peerFile.getReceiver());
             channel.setDiscardOwnMessages(true);  // <-- Own messages will be discarded
             channel.connect(CLUSTER_NAME);
 
             // optional: let cluster stabilize to reduce ambiguity, although it works all the same
             Sleeper.sleep(5000);
 
-            /*PeerFile peerFile = new PeerFile(channel, receiver);
-            this.peerFile = peerFile;*/
             executor.submit(new WatchCallable(peerFile));
             String hostname = DnsHelper.getHostName();
 
