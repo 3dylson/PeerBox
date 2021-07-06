@@ -26,7 +26,7 @@ public class PeerFile implements PeerBox, Serializable {
 
     private int totalChunks = 0;
 
-    private long timestamp = 0;
+    private final long timestamp = 0;
 
     Map<String, File> peerFiles = new ConcurrentHashMap<>();
     Map<File, Integer> chunksTotal = new ConcurrentHashMap<>();

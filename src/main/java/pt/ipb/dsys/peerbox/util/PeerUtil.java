@@ -23,7 +23,7 @@ public class PeerUtil {
 
     /**
      * If not running inside docker, bind to address 127.0.0.1.
-     * This prevents network problems the happen (mostly) in windows
+     * This prevents network problems that happens (mostly) in windows
      */
     public static void localhostFix(String gossipHostname) {
         if (!isPeer(gossipHostname))
