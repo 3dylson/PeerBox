@@ -300,7 +300,7 @@ public class PeerFile implements PeerBox, Serializable {
         channel.send(new ObjectMessage(null, "Delete"));
         Sleeper.sleep(3000);
         if (removedChunks == null) {
-            logger.warn("Chunks not found");
+            logger.warn("Chunks not found to be deleted");
             //return;
         } else {
             for (int i = 1; i <= removedChunks.size(); i++) {
@@ -314,6 +314,7 @@ public class PeerFile implements PeerBox, Serializable {
         File delFile = new File(peerBox + path);
         if (delFile.exists()) {
             delFile.delete();
+            logger.info("File: {}, has been successfully deleted.",path);
         }
         peerFiles.remove(path);
         channel.send(new ObjectMessage(null, "Default"));

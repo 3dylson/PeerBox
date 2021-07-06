@@ -53,7 +53,6 @@ public class WatchFolder {
                     // Perform necessary action with the event
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
 
-
                         System.out.println("A new file is created : " + fileName);
                         Path path = Paths.get(peerBox+fileName);
                         pf.setData(Files.readAllBytes(path));

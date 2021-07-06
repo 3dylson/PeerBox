@@ -110,6 +110,12 @@ public class Controller {
 
         hostFiles.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             selectedFile.set(newValue);
+            logger.info("Selected: {}",newValue);
+        });
+
+        clusterFiles.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            selectedFile.set(newValue);
+            logger.info("Selected: {}",newValue);
         });
 
         fetchBttn.setOnAction((event -> {
@@ -117,6 +123,16 @@ public class Controller {
                 peerFile.fetch(new PeerFileID(null,selectedFile.get(),null,0));
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }));
+
+        deleteBttn.setOnAction((event -> {
+            try {
+                peerFile.delete(new PeerFileID(null,selectedFile.get(),null,0));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }finally {
+                files.remove(selectedFile.get());
             }
         }));
 
