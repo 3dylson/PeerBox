@@ -13,7 +13,6 @@ import pt.ipb.dsys.peerbox.util.Sleeper;
 import pt.ipb.dsys.peerbox.util.WatchCallable;
 
 import java.io.File;
-import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -65,8 +64,8 @@ public class Main {
             }
 
             while (true) {
-                if(!receiver.getChunks().isEmpty()){
-                    logger.info("-- ({}) have this files chunks: ",hostname);
+                if (!receiver.getChunks().isEmpty()) {
+                    logger.info("-- ({}) have this files chunks: ", hostname);
                     receiver.listChunks();
                     Sleeper.sleep(50000);
                 }

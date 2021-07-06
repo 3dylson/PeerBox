@@ -26,7 +26,7 @@ public class LoggingReceiver implements Receiver, Serializable {
     Map<String, Integer> totalChunkfile = new ConcurrentHashMap<>();
     Map<UUID, byte[]> chunks = new ConcurrentHashMap<>();
 
-    List<byte[]> tmpchunks = new ArrayList<>();;
+    List<byte[]> tmpchunks = new ArrayList<>();
 
     public enum STATES {
         DEFAULT, SAVE, FETCH, DELETE, FILE
