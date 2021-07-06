@@ -17,7 +17,7 @@ import java.io.IOException;
 public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     @Value("classpath:/gui.fxml")
     private Resource peerboxResource;
-    private final String appTitle;
+    private String appTitle;
     private ApplicationContext appContext;
 
     public StageInitializer(@Value("${spring.application.ui.title}") String appTitle, ApplicationContext appContext) {
@@ -29,7 +29,7 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     public void onApplicationEvent(StageReadyEvent event) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(peerboxResource.getURL());
-            //fxmlLoader.setControllerFactory(param -> appContext.getBean(param));
+            fxmlLoader.setControllerFactory(param -> appContext.getBean(param));
             Parent parent = fxmlLoader.load();
 
             Stage stage = event.getStage();
