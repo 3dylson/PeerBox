@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import pt.ipb.dsys.peerbox.jgroups.LoggingReceiver;
 import pt.ipb.dsys.peerbox.util.Sleeper;
 
-import javax.swing.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -125,11 +124,11 @@ public class PeerFile implements PeerBox, Serializable {
         ArrayList<Address> receivers = new ArrayList<>(channel.getView().getMembers());
         File newFile = new File(peerBox+path);
 
-        if(receivers.size()<1){
+        if(receivers.size()<2){
             logger.warn("There's no receivers! Saving File without replicas...");
             createFileWithData(path, newFile);
             logger.info("File: {}, saved with 0 replicas of 0 chunk(s).",path);
-
+            return null;
         }
 
 
@@ -165,7 +164,7 @@ public class PeerFile implements PeerBox, Serializable {
                         Sleeper.sleep(3000);
                         channel.send(new ObjectMessage(destination,new PeerFileID(chunkId,path,chunk,j)));
 
-                        }
+                    }
                 }
 
             } finally {
@@ -248,7 +247,7 @@ public class PeerFile implements PeerBox, Serializable {
                         int index = i-1;
                         PeerFileID fileID = new PeerFileID(chunks.get(index),path,null,i);
                         channel.send(new ObjectMessage(null,fileID));
-                }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -333,12 +332,12 @@ public class PeerFile implements PeerBox, Serializable {
         chunksTotal.put(newFile,totalChunks);
     }
 
-    public File[] readDirectory(String directoryName) throws PeerBoxException {
+    public File[] readDirectory() throws PeerBoxException {
         File file = null;
         File[] fileList = null;
 
         try {
-            file = new File(directoryName);
+            file = new File(peerBox);
             fileList = file.listFiles();
         }
         catch(Exception e) {
