@@ -331,16 +331,13 @@ public class PeerFile implements PeerBox, Serializable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
-
-
         peerFiles.put(path, newFile);
         chunksTotal.put(newFile, totalChunks);
     }
 
-    public File[] readDirectory() throws PeerBoxException {
-        File file = null;
+    public File[] readDirectory() {
+        File file;
         File[] fileList = null;
 
         try {

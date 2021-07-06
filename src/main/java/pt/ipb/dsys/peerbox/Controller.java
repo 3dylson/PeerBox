@@ -24,6 +24,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static pt.ipb.dsys.peerbox.Main.peerBox;
+
 @Component
 public class Controller {
 
@@ -41,6 +43,8 @@ public class Controller {
     public Button deleteBttn;
     @FXML
     public Button deleteOneReplica;
+    @FXML
+    public Button openFileBttn;
 
     private final PeerFile peerFile;
 
@@ -53,6 +57,7 @@ public class Controller {
     public void initialize() throws PeerBoxException {
         String hostname = DnsHelper.getHostName();
         AtomicReference<String> selectedFile = new AtomicReference<>(null);
+        AtomicReference<String> clusterSelectedFile = new AtomicReference<>(null);
         ObservableList<String> files = FXCollections.observableArrayList();
         ObservableList<String> remoteFiles = FXCollections.observableArrayList();
         File[] listFiles = peerFile.readDirectory();
@@ -113,17 +118,35 @@ public class Controller {
 
         hostFiles.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             selectedFile.set(newValue);
-            logger.info("Selected: {}",newValue);
+            logger.info("Node selected: {}",newValue);
         });
 
         clusterFiles.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            selectedFile.set(newValue);
-            logger.info("Selected: {}",newValue);
+            clusterSelectedFile.set(newValue);
+            logger.info("Cluster selected: {}",newValue);
         });
+
+        openFileBttn.setOnAction((event -> {
+            try {
+                if (selectedFile.get() != null) {
+                    peerFile.fetch(new PeerFileID(null,selectedFile.get(),null,0));
+                }
+                else {
+                    logger.warn("No Node file selected!");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
 
         fetchBttn.setOnAction((event -> {
             try {
-                peerFile.fetch(new PeerFileID(null,selectedFile.get(),null,0));
+                if (clusterSelectedFile.get() != null) {
+                    peerFile.fetch(new PeerFileID(null,clusterSelectedFile.get(),null,0));
+                }
+                else {
+                    logger.warn("No Cluster file selected!");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -131,18 +154,33 @@ public class Controller {
 
         deleteBttn.setOnAction((event -> {
             try {
-                peerFile.delete(new PeerFileID(null,selectedFile.get(),null,0));
+                if (clusterSelectedFile.get() != null){
+                    peerFile.delete(new PeerFileID(null,clusterSelectedFile.get(),null,0));
+                    remoteFiles.remove(clusterSelectedFile.get());
+                    files.remove(clusterSelectedFile.get());
+                }
+                else {
+                    logger.warn("No Cluster file selected!");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-            }finally {
-                files.remove(selectedFile.get());
             }
         }));
 
         deleteOneReplica.setOnAction((event -> {
-            peerFile.getPeerFiles().remove(selectedFile.get());
-            files.remove(selectedFile.get());
-            logger.info("File has been deleted only on this peer ({}) : {}",hostname,selectedFile.get());
+            if (selectedFile.get() != null) {
+                String olFile = selectedFile.get();
+                peerFile.getPeerFiles().remove(selectedFile.get());
+                files.remove(selectedFile.get());
+                File delFile = new File(peerBox + olFile);
+                if (delFile.exists()) {
+                    delFile.delete();
+                }
+                logger.info("File has been deleted only on this peer ({}) : {}",hostname,olFile);
+            }
+            else {
+                logger.warn("No Node file selected!");
+            }
         }));
 
     }
