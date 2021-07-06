@@ -45,10 +45,6 @@ public class Controller {
     public Button openFileBttn;
     @FXML
     public TableView<File> dataTable;
-    @FXML
-    public TableColumn<File,String> modifiedDate;
-    @FXML
-    public TableColumn<File,String> fileBytes;
 
     private final PeerFile peerFile;
 
@@ -68,8 +64,7 @@ public class Controller {
         Arrays.stream(listFiles).iterator().forEachRemaining(file -> files.add(file.getName()));
         hostFiles.setItems(files);
         clusterFiles.setItems(remoteFiles);
-
-
+        dataTable.setPlaceholder(new Label("No file selected"));
 
         SpinnerValueFactory<Integer> valueFactory = replicas.getValueFactory();
         replicas.setOnScroll(event -> {
