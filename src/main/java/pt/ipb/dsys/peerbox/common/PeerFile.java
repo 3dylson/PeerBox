@@ -54,6 +54,10 @@ public class PeerFile implements PeerBox, Serializable {
         return fileId;
     }
 
+    public JChannel getChannel() {
+        return channel;
+    }
+
     public void setFileId(PeerFileID fileId) {
         this.fileId = fileId;
     }
@@ -208,6 +212,7 @@ public class PeerFile implements PeerBox, Serializable {
             List<UUID> chunks = fileChunks.get(path);
 
             channel.send(new ObjectMessage(null, "Fetch"));
+            receiver.setState(LoggingReceiver.STATES.FILE);
             Sleeper.sleep(3000);
 
             if (chunks == null) {

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import pt.ipb.dsys.peerbox.common.PeerBoxException;
 import pt.ipb.dsys.peerbox.common.PeerFile;
 import pt.ipb.dsys.peerbox.common.PeerFileID;
+import pt.ipb.dsys.peerbox.util.Sleeper;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -156,8 +157,11 @@ public class Controller {
             try {
                 if (clusterSelectedFile.get() != null){
                     peerFile.delete(new PeerFileID(null,clusterSelectedFile.get(),null,0));
+                    Sleeper.sleep(300);
                     remoteFiles.remove(clusterSelectedFile.get());
-                    files.remove(clusterSelectedFile.get());
+                    if (files.contains(clusterSelectedFile.get())){
+                        files.remove(clusterSelectedFile.get());
+                    }
                 }
                 else {
                     logger.warn("No Cluster file selected!");
