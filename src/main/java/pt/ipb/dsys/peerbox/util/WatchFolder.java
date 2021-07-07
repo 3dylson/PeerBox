@@ -11,7 +11,6 @@ import static pt.ipb.dsys.peerbox.Main.peerBox;
 
 public class WatchFolder {
 
-    private final int defaultReplicas = 2;
     PeerFile pf;
 
     public WatchFolder(PeerFile pf) {
@@ -43,6 +42,7 @@ public class WatchFolder {
                 for (WatchEvent<?> event : watchKey.pollEvents()) {
 
                     // Get file name from even context
+                    @SuppressWarnings("unchecked")
                     WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
 
                     Path fileName = pathEvent.context();
@@ -53,19 +53,19 @@ public class WatchFolder {
                     // Perform necessary action with the event
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
 
-
                         System.out.println("A new file is created : " + fileName);
                         Path path = Paths.get(peerBox+fileName);
                         pf.setData(Files.readAllBytes(path));
-                        pf.save(fileName.toString(),defaultReplicas);
+                        int defaultReplicas = 2;
+                        pf.save(fileName.toString(), defaultReplicas);
 
                     }
 
                     if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
 
-                        String hostname = DnsHelper.getHostName();
+                        /*String hostname = DnsHelper.getHostName();
                         System.out.println("File has been deleted only on this peer (" + hostname + ") : "+fileName);
-                        pf.getPeerFiles().remove(fileName.toString());
+                        pf.getPeerFiles().remove(fileName.toString());*/
 
                     }
                     if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {

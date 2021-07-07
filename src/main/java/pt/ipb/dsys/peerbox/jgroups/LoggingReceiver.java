@@ -20,13 +20,12 @@ public class LoggingReceiver implements Receiver, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
     private JChannel channel;
-    private View new_view;
 
-    List<Address> members = new LinkedList<>();
+    final List<Address> members = new LinkedList<>();
     Map<String, Integer> totalChunkfile = new ConcurrentHashMap<>();
     Map<UUID, byte[]> chunks = new ConcurrentHashMap<>();
 
-    List<byte[]> tmpchunks = new ArrayList<>();;
+    List<byte[]> tmpchunks = new ArrayList<>();
 
     public enum STATES {
         DEFAULT, SAVE, FETCH, DELETE, FILE
@@ -38,48 +37,12 @@ public class LoggingReceiver implements Receiver, Serializable {
         this.channel = channel;
     }
 
-    public JChannel getChannel() {
-        return channel;
-    }
-
     public void setChannel(JChannel channel) {
         this.channel = channel;
     }
 
-    public View getNew_view() {
-        return new_view;
-    }
-
-    public void setNew_view(View new_view) {
-        this.new_view = new_view;
-    }
-
-    public List<Address> getMembers() {
-        return members;
-    }
-
-    public void setMembers(List<Address> members) {
-        this.members = members;
-    }
-
-    public Map<String, Integer> getTotalChunkfile() {
-        return totalChunkfile;
-    }
-
-    public void setTotalChunkfile(Map<String, Integer> totalChunkfile) {
-        this.totalChunkfile = totalChunkfile;
-    }
-
     public Map<UUID, byte[]> getChunks() {
         return chunks;
-    }
-
-    public void setChunks(Map<UUID, byte[]> chunks) {
-        this.chunks = chunks;
-    }
-
-    public STATES getState() {
-        return state;
     }
 
     public void setState(STATES state) {
@@ -108,6 +71,7 @@ public class LoggingReceiver implements Receiver, Serializable {
     @Override
     public void receive(Message msg) {
        Object message = msg.getObject();
+       Address source = msg.src();
        /*String line = "Message received from: "
                 + msg.getSrc()
                 + " to: " + msg.getDest()
@@ -126,24 +90,27 @@ public class LoggingReceiver implements Receiver, Serializable {
                if (chunkBytes != null) {
                    logger.info("-- sending chunks of the file: {} ... ", ((PeerFileID) message).getFileName());
                    ((PeerFileID) message).setChunk(chunkBytes);
-
                    try {
-                       channel.send(new ObjectMessage(msg.src(),"File"));
-                       Sleeper.sleep(3000);
-                       channel.send(new ObjectMessage(msg.src(),message));
+                       logger.info("(Debugging) FILE FETCH");
+                       //channel.send(new ObjectMessage(source,"File"));
+                       //this.setState(STATES.FILE);
+                       PeerFile newFile = new PeerFile(channel,this);
+                       newFile.setFileId((PeerFileID) message);
+                       PeerFileID peerFileID = (PeerFileID) message;
+                       newFile.getChannel().send(new ObjectMessage(source,peerFileID));
+                       Sleeper.sleep(300);
+                       //channel.send(new ObjectMessage(null,peerFileID));
                    } catch (Exception e) {
                        e.printStackTrace();
                    }
-
-
                }
            }
 
            else if (state == STATES.FILE) {
 
-               tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
                int fetchTotal = totalChunkfile.get(((PeerFileID) message).getFileName());
-
+               tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
+               //logger.info("(Debugging) FILE REBUILD");
                if (((PeerFileID) message).getChunkNumber() == fetchTotal) {
 
                    byte[] fileBytes = new byte[0];
@@ -173,17 +140,8 @@ public class LoggingReceiver implements Receiver, Serializable {
                    } finally {
                        logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
                        logger.info("Fetch {} again to show metadata...",peerBox+((PeerFileID) message).getFileName());
-                       setState(STATES.DEFAULT);
+                       this.setState(STATES.DEFAULT);
                    }
-
-
-                   /*try {
-                       PeerFile file = new PeerFile(null,null);
-                       file.setFileId((PeerFileID) message);
-                       channel.send(new ObjectMessage(msg.src(),file));
-                   } catch (Exception e) {
-                       e.printStackTrace();
-                   }*/
                }
            }
 
