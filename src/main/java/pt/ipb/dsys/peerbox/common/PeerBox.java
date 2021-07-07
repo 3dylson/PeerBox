@@ -1,8 +1,5 @@
 package pt.ipb.dsys.peerbox.common;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 /**
  * The main interface that specifies the operation of the PeerBox system.
  * It contains the basic functionality.
