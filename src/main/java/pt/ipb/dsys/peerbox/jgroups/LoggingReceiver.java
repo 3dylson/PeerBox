@@ -126,16 +126,13 @@ public class LoggingReceiver implements Receiver, Serializable {
                if (chunkBytes != null) {
                    logger.info("-- sending chunks of the file: {} ... ", ((PeerFileID) message).getFileName());
                    ((PeerFileID) message).setChunk(chunkBytes);
-
                    try {
                        channel.send(new ObjectMessage(msg.src(),"File"));
-                       Sleeper.sleep(3000);
+                       Sleeper.sleep(300);
                        channel.send(new ObjectMessage(msg.src(),message));
                    } catch (Exception e) {
                        e.printStackTrace();
                    }
-
-
                }
            }
 
@@ -173,18 +170,8 @@ public class LoggingReceiver implements Receiver, Serializable {
                    } finally {
                        logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
                        logger.info("Fetch {} again to show metadata...",peerBox+((PeerFileID) message).getFileName());
-                       //this.setState(STATES.DEFAULT);
                        this.setState(STATES.DEFAULT);
                    }
-
-
-                   /*try {
-                       PeerFile file = new PeerFile(null,null);
-                       file.setFileId((PeerFileID) message);
-                       channel.send(new ObjectMessage(msg.src(),file));
-                   } catch (Exception e) {
-                       e.printStackTrace();
-                   }*/
                }
            }
 

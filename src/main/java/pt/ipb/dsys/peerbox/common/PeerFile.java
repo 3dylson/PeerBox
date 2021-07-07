@@ -314,7 +314,7 @@ public class PeerFile implements PeerBox, Serializable {
         File delFile = new File(peerBox + path);
         if (delFile.exists()) {
             delFile.delete();
-            logger.info("File: {}, has been successfully deleted.",path);
+            logger.info("File: {}, has been successfully deleted.", path);
         }
         peerFiles.remove(path);
         channel.send(new ObjectMessage(null, "Default"));
