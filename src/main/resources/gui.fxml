@@ -22,5 +22,6 @@
       <Text layoutX="42.0" layoutY="391.0" strokeType="OUTSIDE" strokeWidth="0.0" text=" Drag and drop files in node panel to save it with replicas per chunk" />
       <Button fx:id="deleteOneReplica" layoutX="226.0" layoutY="312.0" mnemonicParsing="false" text="Delete File on this Node" />
       <Button fx:id="openFileBttn" layoutX="265.0" layoutY="273.0" mnemonicParsing="false" text="Open File" />
+      <Text layoutX="439.0" layoutY="363.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Select file on PeerBox panel" />
    </children>
 </AnchorPane>

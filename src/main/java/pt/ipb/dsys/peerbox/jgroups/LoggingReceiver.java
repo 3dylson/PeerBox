@@ -141,9 +141,8 @@ public class LoggingReceiver implements Receiver, Serializable {
 
            else if (state == STATES.FILE) {
 
-               tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
                int fetchTotal = totalChunkfile.get(((PeerFileID) message).getFileName());
-
+               tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
 
                if (((PeerFileID) message).getChunkNumber() == fetchTotal) {
 
@@ -174,7 +173,8 @@ public class LoggingReceiver implements Receiver, Serializable {
                    } finally {
                        logger.info("File successfully fetched: {}",peerBox+((PeerFileID) message).getFileName());
                        logger.info("Fetch {} again to show metadata...",peerBox+((PeerFileID) message).getFileName());
-                       setState(STATES.DEFAULT);
+                       //this.setState(STATES.DEFAULT);
+                       this.setState(STATES.DEFAULT);
                    }
 
 

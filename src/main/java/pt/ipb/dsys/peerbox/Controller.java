@@ -64,7 +64,6 @@ public class Controller {
         Arrays.stream(listFiles).iterator().forEachRemaining(file -> files.add(file.getName()));
         hostFiles.setItems(files);
         clusterFiles.setItems(remoteFiles);
-        dataTable.setPlaceholder(new Label("No file selected"));
 
         SpinnerValueFactory<Integer> valueFactory = replicas.getValueFactory();
         replicas.setOnScroll(event -> {
