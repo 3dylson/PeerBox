@@ -20,9 +20,8 @@ public class LoggingReceiver implements Receiver, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(LoggingReceiver.class);
 
     private JChannel channel;
-    private View new_view;
 
-    List<Address> members = new LinkedList<>();
+    final List<Address> members = new LinkedList<>();
     Map<String, Integer> totalChunkfile = new ConcurrentHashMap<>();
     Map<UUID, byte[]> chunks = new ConcurrentHashMap<>();
 
@@ -38,48 +37,12 @@ public class LoggingReceiver implements Receiver, Serializable {
         this.channel = channel;
     }
 
-    public JChannel getChannel() {
-        return channel;
-    }
-
     public void setChannel(JChannel channel) {
         this.channel = channel;
     }
 
-    public View getNew_view() {
-        return new_view;
-    }
-
-    public void setNew_view(View new_view) {
-        this.new_view = new_view;
-    }
-
-    public List<Address> getMembers() {
-        return members;
-    }
-
-    public void setMembers(List<Address> members) {
-        this.members = members;
-    }
-
-    public Map<String, Integer> getTotalChunkfile() {
-        return totalChunkfile;
-    }
-
-    public void setTotalChunkfile(Map<String, Integer> totalChunkfile) {
-        this.totalChunkfile = totalChunkfile;
-    }
-
     public Map<UUID, byte[]> getChunks() {
         return chunks;
-    }
-
-    public void setChunks(Map<UUID, byte[]> chunks) {
-        this.chunks = chunks;
-    }
-
-    public STATES getState() {
-        return state;
     }
 
     public void setState(STATES state) {
@@ -141,7 +104,7 @@ public class LoggingReceiver implements Receiver, Serializable {
                int fetchTotal = totalChunkfile.get(((PeerFileID) message).getFileName());
                tmpchunks.add(((PeerFileID) message).getChunkNumber(),((PeerFileID) message).getChunk());
 
-               if (((PeerFileID) message).getChunkNumber() == fetchTotal) {
+               //if (((PeerFileID) message).getChunkNumber() == fetchTotal) {
 
                    byte[] fileBytes = new byte[0];
                    File temp = new File(peerBox+((PeerFileID) message).getFileName());
@@ -172,7 +135,7 @@ public class LoggingReceiver implements Receiver, Serializable {
                        logger.info("Fetch {} again to show metadata...",peerBox+((PeerFileID) message).getFileName());
                        this.setState(STATES.DEFAULT);
                    }
-               }
+               //}
            }
 
            else if (state == STATES.DELETE) {

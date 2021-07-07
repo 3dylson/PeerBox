@@ -28,16 +28,8 @@ public class PeerFileID implements Serializable {
         return id;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
     public String getFileName() {
         return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
     }
 
     public byte[] getChunk() {
@@ -50,10 +42,6 @@ public class PeerFileID implements Serializable {
 
     public int getChunkNumber() {
         return chunkNumber;
-    }
-
-    public void setChunkNumber(int chunkNumber) {
-        this.chunkNumber = chunkNumber;
     }
 
 }

@@ -28,8 +28,6 @@ public class PeerFile implements PeerBox, Serializable {
 
     private int totalChunks = 0;
 
-    private final long timestamp = 0;
-
     Map<String, File> peerFiles = new ConcurrentHashMap<>();
     Map<File, Integer> chunksTotal = new ConcurrentHashMap<>();
     Map<String, List<UUID>> fileChunks = new ConcurrentHashMap<>();
@@ -60,10 +58,6 @@ public class PeerFile implements PeerBox, Serializable {
         this.fileId = fileId;
     }
 
-    public byte[] getData() {
-        return data;
-    }
-
     public void setData(byte[] data) {
         this.data = data;
     }
@@ -72,24 +66,8 @@ public class PeerFile implements PeerBox, Serializable {
         return peerFiles;
     }
 
-    public void setPeerFiles(Map<String, File> peerFiles) {
-        this.peerFiles = peerFiles;
-    }
-
-    public JChannel getChannel() {
-        return channel;
-    }
-
-    public void setChannel(JChannel channel) {
-        this.channel = channel;
-    }
-
     public LoggingReceiver getReceiver() {
         return receiver;
-    }
-
-    public void setReceiver(LoggingReceiver receiver) {
-        this.receiver = receiver;
     }
 
     public int getTotalChunks() {
@@ -98,14 +76,6 @@ public class PeerFile implements PeerBox, Serializable {
 
     public void setTotalChunks(int totalChunks) {
         this.totalChunks = totalChunks;
-    }
-
-    public Map<String, List<UUID>> getFileChunks() {
-        return fileChunks;
-    }
-
-    public void setFileChunks(Map<String, List<UUID>> fileChunks) {
-        this.fileChunks = fileChunks;
     }
 
     /**
@@ -198,9 +168,14 @@ public class PeerFile implements PeerBox, Serializable {
             PeerFileID filePathId = new PeerFileID(null, path, null, 0);
             setFileId(filePathId);
 
-            channel.send(new ObjectMessage(null, new PeerFile(filePathId, totalChunk)));
+            ObjectMessage message = new ObjectMessage(null,new PeerFile(filePathId, totalChunk));
+            //channel.send(new ObjectMessage(null, new PeerFile(filePathId, totalChunk)));
+            channel.send(message);
+            receiver.setState(LoggingReceiver.STATES.SAVE);
+            receiver.receive(message);
 
             Sleeper.sleep(3000);
+            receiver.setState(LoggingReceiver.STATES.DEFAULT);
             channel.send(new ObjectMessage(null, "Default"));
 
             createFileWithData(path, newFile);
