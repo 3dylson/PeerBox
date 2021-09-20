@@ -29,3 +29,7 @@ Only then run the Main on the IDE:
 ```
 
 The folder `boxFile` at the root directory is where all the files will be handled by the application.
+
+## APP
+
+![image](https://github.com/3dylson/PeerBox/blob/master/src/main/resources/peerbox.jpg?raw=true)
