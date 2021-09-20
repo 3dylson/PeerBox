@@ -1,3 +1,9 @@
+## About
+
+Distributed DropBox clone service for a local area network (LAN). 
+The idea is to use the free disk space of the computers in a LAN
+for replicating files in other computers in the same LAN.
+
 ## Setup
 
 If you have no idea what JGroups is, check this
